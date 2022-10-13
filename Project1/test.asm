@@ -9,7 +9,7 @@ TITLE Windows Application                   (WinApp.asm)
 INCLUDE Irvine32.inc
 INCLUDE GraphWin.inc
 
-;函数引入，用于后面翻译键盘输入为字符码
+;函数引入，用于后面翻译键盘输入为字符�?
 TranslateMessage PROTO STDCALL :DWORD
 
 ;固定参数，用于后面识别键盘按下与抬起
@@ -31,6 +31,10 @@ GreetTitle BYTE "Main Window Active",0
 GreetText  BYTE "This window is shown immediately after "
 	       BYTE "CreateWindow and UpdateWindow are called.",0
 
+buttonTitle BYTE "push keyboard Window",0
+buttonText  BYTE "This window was activated by a"
+	       BYTE "WM_KEYDOWN message.",0
+
 CloseMsg   BYTE "WM_CLOSE message received",0
 
 ErrorTitle  BYTE "Error",0
@@ -48,136 +52,163 @@ winRect   RECT <>
 hMainWnd  DWORD ?
 hInstance DWORD ?
 
+; 按键是否按下的指示变量
+UpKeyHold DWORD 0 
+DownKeyHold DWORD 0
+LeftKeyHold DWORD 0
+RightKeyHold DWORD 0
+WKeyHold DWORD 0
+SKeyHold DWORD 0
+AKeyHold DWORD 0
+DKeyHold DWORD 0
+SpaceKeyHold DWORD 0
+EnterKeyHold DWORD 0
+
 ;=================== CODE =========================
 .code
 WinMain PROC
-; Get a handle to the current process.
-	INVOKE GetModuleHandle, NULL
-	mov hInstance, eax
-	mov MainWin.hInstance, eax
+	; Get a handle to the current process.
+		INVOKE GetModuleHandle, NULL
+		mov hInstance, eax
+		mov MainWin.hInstance, eax
 
-; Load the program's icon and cursor.
-	INVOKE LoadIcon, NULL, IDI_APPLICATION
-	mov MainWin.hIcon, eax
-	INVOKE LoadCursor, NULL, IDC_ARROW
-	mov MainWin.hCursor, eax
+	; Load the program's icon and cursor.
+		INVOKE LoadIcon, NULL, IDI_APPLICATION
+		mov MainWin.hIcon, eax
+		INVOKE LoadCursor, NULL, IDC_ARROW
+		mov MainWin.hCursor, eax
 
-; Register the window class.
-	INVOKE RegisterClass, ADDR MainWin
-	.IF eax == 0
-	  call ErrorHandler
-	  jmp Exit_Program
-	.ENDIF
+	; Register the window class.
+		INVOKE RegisterClass, ADDR MainWin
+		.IF eax == 0
+		call ErrorHandler
+		jmp Exit_Program
+		.ENDIF
 
-; Create the application's main window.
-; Returns a handle to the main window in EAX.
-	INVOKE CreateWindowEx, 0, ADDR className,
-	  ADDR WindowName,MAIN_WINDOW_STYLE,
-	  CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
-	  CW_USEDEFAULT,NULL,NULL,hInstance,NULL
-	mov hMainWnd,eax
+	; Create the application's main window.
+	; Returns a handle to the main window in EAX.
+		INVOKE CreateWindowEx, 0, ADDR className,
+		ADDR WindowName,MAIN_WINDOW_STYLE,
+		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
+		CW_USEDEFAULT,NULL,NULL,hInstance,NULL
+		mov hMainWnd,eax
 
-; If CreateWindowEx failed, display a message & exit.
-	.IF eax == 0
-	  call ErrorHandler
-	  jmp  Exit_Program
-	.ENDIF
+	; If CreateWindowEx failed, display a message & exit.
+		.IF eax == 0
+		call ErrorHandler
+		jmp  Exit_Program
+		.ENDIF
 
-; Show and draw the window.
-	INVOKE ShowWindow, hMainWnd, SW_SHOW
-	INVOKE UpdateWindow, hMainWnd
+	; Show and draw the window.
+		INVOKE ShowWindow, hMainWnd, SW_SHOW
+		INVOKE UpdateWindow, hMainWnd
 
-; Display a greeting message.
-;INVOKE MessageBox, hMainWnd, ADDR GreetText,ADDR GreetTitle, MB_OK
+	; Display a greeting message.
+	;INVOKE MessageBox, hMainWnd, ADDR GreetText,ADDR GreetTitle, MB_OK
 
-; Begin the program's message-handling loop.
-Message_Loop:
-	; Get next message from the queue.
-	INVOKE GetMessage, ADDR msg, NULL,NULL,NULL
+	; Begin the program's message-handling loop.
+	Message_Loop:
+		; Get next message from the queue.
+		INVOKE GetMessage, ADDR msg, NULL,NULL,NULL
 
-	; Quit if no more messages.
-	.IF eax == 0
-	  jmp Exit_Program
-	.ENDIF
+		; Quit if no more messages.
+		.IF eax == 0
+		jmp Exit_Program
+		.ENDIF
 
-	;翻译键盘消息，把键盘消息转化成字符码
-	INVOKE TranslateMessage, ADDR msg
-	; Relay the message to the program's WinProc.
-	INVOKE DispatchMessage, ADDR msg
-    jmp Message_Loop
+		;翻译键盘消息，把键盘消息转化成字符码
+		INVOKE TranslateMessage, ADDR msg
+		; Relay the message to the program's WinProc.
+		INVOKE DispatchMessage, ADDR msg
+		jmp Message_Loop
 
-Exit_Program:
-	  INVOKE ExitProcess,0
+	Exit_Program:
+		INVOKE ExitProcess,0
 WinMain ENDP
 
 ;-----------------------------------------------------
 WinProc PROC,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
-; The application's message handler, which handles
-; application-specific messages. All other messages
-; are forwarded to the default Windows message
-; handler.
-;-----------------------------------------------------
-	mov eax, localMsg
-	
-	cmp eax,WM_KEYDOWN
-	je KeyDownMessage
-	cmp eax,WM_LBUTTONDOWN		; mouse button?
-	je Lmousedown
-	cmp eax,WM_CREATE			; create window?
-	je CreateWindowMessage	  
-	cmp eax,WM_CLOSE		 ; close window?
-	je CloseWindowMessage
-	jmp OtherMessage			; other message?
+	; The application's message handler, which handles
+	; application-specific messages. All other messages
+	; are forwarded to the default Windows message
+	; handler.
+	;-----------------------------------------------------
+		mov eax, localMsg
+		
+		;判断是否为键盘按下操作
+		cmp eax,WM_KEYDOWN
+		je KeyDownMessage
+		;检查按下的键盘是否抬起，抬起则恢复
+		cmp eax,WM_LBUTTONDOWN		; mouse button?
+		je Lmousedown
+		cmp eax,WM_CREATE			; create window?
+		je CreateWindowMessage	  
+		cmp eax,WM_CLOSE		 ; close window?
+		je CloseWindowMessage
+		jmp OtherMessage			; other message?
 
-KeyDownMessage:
-	INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
-	jmp WinProcExit
+	KeyDownMessage:
+		mov eax,[localMsg+4] ;将按键的值转给eax
 
-Lmousedown:
-	INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
-	jmp WinProcExit
+		cmp eax,32         ;识别空格键
+		jne WinProcExit
+		mov UpKeyHold,1   ;设置标识
+		INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+		jmp WinProcExit
 
-CreateWindowMessage:
-	INVOKE MessageBox, hWnd, ADDR AppLoadMsgText, ADDR AppLoadMsgTitle, MB_OK
-	jmp WinProcExit
+	KeyUpMessage:
+		mov eax,[localMsg+4]  ;将按键的值转给eax
+ 
+		cmp eax,32          ;识别空格键
+		jne WinProcExit 
+		mov UpKeyHold,0  ;取消标识
+		jmp WinProcExit
 
-CloseWindowMessage:
-	INVOKE MessageBox, hWnd, ADDR CloseMsg,ADDR WindowName, MB_OK
-	INVOKE PostQuitMessage,0
-	jmp WinProcExit
+	Lmousedown:
+		INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
+		jmp WinProcExit
 
-OtherMessage:
-	INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
-	jmp WinProcExit
+	CreateWindowMessage:
+		INVOKE MessageBox, hWnd, ADDR AppLoadMsgText, ADDR AppLoadMsgTitle, MB_OK
+		jmp WinProcExit
 
-WinProcExit:
-	ret
+	CloseWindowMessage:
+		INVOKE MessageBox, hWnd, ADDR CloseMsg,ADDR WindowName, MB_OK
+		INVOKE PostQuitMessage,0
+		jmp WinProcExit
+
+	OtherMessage:
+		INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
+		jmp WinProcExit
+
+	WinProcExit:
+		ret
 WinProc ENDP
 
 ;---------------------------------------------------
 ErrorHandler PROC
-; Display the appropriate system error message.
-;---------------------------------------------------
-.data
-pErrorMsg  DWORD ?		; ptr to error message
-messageID  DWORD ?
-.code
-	INVOKE GetLastError	; Returns message ID in EAX
-	mov messageID,eax
+	; Display the appropriate system error message.
+	;---------------------------------------------------
+	.data
+	pErrorMsg  DWORD ?		; ptr to error message
+	messageID  DWORD ?
+	.code
+		INVOKE GetLastError	; Returns message ID in EAX
+		mov messageID,eax
 
-	; Get the corresponding message string.
-	INVOKE FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER + \
-	  FORMAT_MESSAGE_FROM_SYSTEM,NULL,messageID,NULL,
-	  ADDR pErrorMsg,NULL,NULL
+		; Get the corresponding message string.
+		INVOKE FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER + \
+		FORMAT_MESSAGE_FROM_SYSTEM,NULL,messageID,NULL,
+		ADDR pErrorMsg,NULL,NULL
 
-	; Display the error message.
-	INVOKE MessageBox,NULL, pErrorMsg, ADDR ErrorTitle,
-	  MB_ICONERROR+MB_OK
+		; Display the error message.
+		INVOKE MessageBox,NULL, pErrorMsg, ADDR ErrorTitle,
+		MB_ICONERROR+MB_OK
 
-	; Free the error message string.
-	INVOKE LocalFree, pErrorMsg
-	ret
+		; Free the error message string.
+		INVOKE LocalFree, pErrorMsg
+		ret
 ErrorHandler ENDP
 
 END WinMain
