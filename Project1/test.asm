@@ -9,8 +9,12 @@ TITLE Windows Application                   (WinApp.asm)
 INCLUDE Irvine32.inc
 INCLUDE GraphWin.inc
 
-;º¯ÊıÒıÈë
+;å‡½æ•°å¼•å…¥ï¼Œç”¨äºåé¢ç¿»è¯‘é”®ç›˜è¾“å…¥ä¸ºå­—ç¬¦ç 
 TranslateMessage PROTO STDCALL :DWORD
+
+;å›ºå®šå‚æ•°ï¼Œç”¨äºåé¢è¯†åˆ«é”®ç›˜æŒ‰ä¸‹ä¸æŠ¬èµ·
+WM_KEYDOWN		EQU		000000100h
+WM_KEYUP		EQU		000000101h
 
 ;==================== DATA =======================
 .data
@@ -96,7 +100,7 @@ Message_Loop:
 	  jmp Exit_Program
 	.ENDIF
 
-	;·­Òë¼üÅÌÏûÏ¢£¬°Ñ¼üÅÌÏûÏ¢×ª»¯³É×Ö·ûÂë
+	;ç¿»è¯‘é”®ç›˜æ¶ˆæ¯ï¼ŒæŠŠé”®ç›˜æ¶ˆæ¯è½¬åŒ–æˆå­—ç¬¦ç 
 	INVOKE TranslateMessage, ADDR msg
 	; Relay the message to the program's WinProc.
 	INVOKE DispatchMessage, ADDR msg
@@ -116,24 +120,36 @@ WinProc PROC,
 ;-----------------------------------------------------
 	mov eax, localMsg
 	
+	cmp eax,WM_KEYDOWN
+	je KeyDownMessage
+	cmp eax,WM_LBUTTONDOWN		; mouse button?
+	je Lmousedown
+	cmp eax,WM_CREATE			; create window?
+	je CreateWindowMessage	  
+	cmp eax,WM_CLOSE		 ; close window?
+	je CloseWindowMessage
+	jmp OtherMessage			; other message?
 
-	.IF eax == WM_LBUTTONDOWN		; mouse button?
-	  INVOKE MessageBox, hWnd, ADDR PopupText,
-	    ADDR PopupTitle, MB_OK
-	  jmp WinProcExit
-	.ELSEIF eax == WM_CREATE		; create window?
-	  INVOKE MessageBox, hWnd, ADDR AppLoadMsgText,
-	    ADDR AppLoadMsgTitle, MB_OK
-	  jmp WinProcExit
-	.ELSEIF eax == WM_CLOSE		; close window?
-	  INVOKE MessageBox, hWnd, ADDR CloseMsg,
-	    ADDR WindowName, MB_OK
-	  INVOKE PostQuitMessage,0
-	  jmp WinProcExit
-	.ELSE		; other message?
-	  INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
-	  jmp WinProcExit
-	.ENDIF
+KeyDownMessage:
+	INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
+	jmp WinProcExit
+
+Lmousedown:
+	INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
+	jmp WinProcExit
+
+CreateWindowMessage:
+	INVOKE MessageBox, hWnd, ADDR AppLoadMsgText, ADDR AppLoadMsgTitle, MB_OK
+	jmp WinProcExit
+
+CloseWindowMessage:
+	INVOKE MessageBox, hWnd, ADDR CloseMsg,ADDR WindowName, MB_OK
+	INVOKE PostQuitMessage,0
+	jmp WinProcExit
+
+OtherMessage:
+	INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
+	jmp WinProcExit
 
 WinProcExit:
 	ret
