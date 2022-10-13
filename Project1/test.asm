@@ -9,6 +9,9 @@ TITLE Windows Application                   (WinApp.asm)
 INCLUDE Irvine32.inc
 INCLUDE GraphWin.inc
 
+;函数引入
+TranslateMessage PROTO STDCALL :DWORD
+
 ;==================== DATA =======================
 .data
 
@@ -81,8 +84,7 @@ WinMain PROC
 	INVOKE UpdateWindow, hMainWnd
 
 ; Display a greeting message.
-	INVOKE MessageBox, hMainWnd, ADDR GreetText,
-	  ADDR GreetTitle, MB_OK
+;INVOKE MessageBox, hMainWnd, ADDR GreetText,ADDR GreetTitle, MB_OK
 
 ; Begin the program's message-handling loop.
 Message_Loop:
@@ -94,6 +96,8 @@ Message_Loop:
 	  jmp Exit_Program
 	.ENDIF
 
+	;翻译键盘消息，把键盘消息转化成字符码
+	INVOKE TranslateMessage, ADDR msg
 	; Relay the message to the program's WinProc.
 	INVOKE DispatchMessage, ADDR msg
     jmp Message_Loop
@@ -111,6 +115,7 @@ WinProc PROC,
 ; handler.
 ;-----------------------------------------------------
 	mov eax, localMsg
+	
 
 	.IF eax == WM_LBUTTONDOWN		; mouse button?
 	  INVOKE MessageBox, hWnd, ADDR PopupText,
