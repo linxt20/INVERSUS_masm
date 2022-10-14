@@ -11,6 +11,18 @@ INCLUDE GraphWin.inc
 
 ;函数引入，用于后面翻译键盘输入为字符�?
 TranslateMessage PROTO STDCALL :DWORD
+SetTimer PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
+KillTimer PROTO STDCALL :DWORD,:DWORD
+
+GetDC PROTO STDCALL :DWORD
+ReleaseDC PROTO STDCALL :DWORD,:DWORD
+LoadImageA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+
+CreateCompatibleDC PROTO STDCALL: DWORD
+CreateCompatibleBitmap PROTO STDCALL :DWORD,:DWORD,:DWORD
+SelectObject PROTO STDCALL :DWORD,:DWORD
+
+SetBkColor PROTO STDCALL :DWORD,:DWORD
 
 ;固定参数，用于后面识别键盘按下与抬起
 WM_KEYDOWN		EQU		000000100h
@@ -51,6 +63,11 @@ msg	      MSGStruct <>
 winRect   RECT <>
 hMainWnd  DWORD ?
 hInstance DWORD ?
+
+hbitmap DWORD ?
+hdcMem DWORD ?
+hdcPic DWORD ?
+hdc DWORD ?
 
 ; 按键是否按下的指示变量
 UpKeyHold DWORD 0 
@@ -172,12 +189,42 @@ WinProc PROC,
 		jmp WinProcExit
 
 	CreateWindowMessage:
-		INVOKE MessageBox, hWnd, ADDR AppLoadMsgText, ADDR AppLoadMsgTitle, MB_OK
+		mov eax,[localMsg-4]
+		mov hWnd,eax
+
+		invoke SetTimer,hWnd,1,30,NULL
+
+		invoke GetDC,hWnd
+		mov hdc,eax
+
+		invoke CreateCompatibleDC,eax
+		mov hdcPic,eax
+
+		invoke LoadImageA,hInstance,1001,0,0,0,0
+		mov hbitmap,eax
+
+		invoke SelectObject,hdcPic,hbitmap
+
+		invoke CreateCompatibleDC,hdc
+		mov hdcMem,eax
+
+		invoke CreateCompatibleBitmap,hdc,640,480
+		mov hbitmap,eax
+
+		invoke SelectObject,hdcMem,hbitmap
+
+		;invoke SetTextColor,hdcMem,0
+
+		invoke SetBkColor,hdcMem,0
+
+		invoke ReleaseDC,hWnd,hdc
+
 		jmp WinProcExit
 
 	CloseWindowMessage:
-		INVOKE MessageBox, hWnd, ADDR CloseMsg,ADDR WindowName, MB_OK
 		INVOKE PostQuitMessage,0
+
+		invoke KillTimer,hWnd,1
 		jmp WinProcExit
 
 	OtherMessage:
