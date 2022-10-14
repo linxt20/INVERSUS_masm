@@ -140,6 +140,8 @@ WinProc PROC,
 		cmp eax,WM_KEYDOWN
 		je KeyDownMessage
 		;检查按下的键盘是否抬起，抬起则恢复
+		cmp eax,WM_KEYUP
+		je KeyUpMessage
 		cmp eax,WM_LBUTTONDOWN		; mouse button?
 		je Lmousedown
 		cmp eax,WM_CREATE			; create window?
