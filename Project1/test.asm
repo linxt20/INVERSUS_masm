@@ -1,10 +1,5 @@
 TITLE Windows Application                   (WinApp.asm)
 
-; This program displays a resizable application window and
-; several popup message boxes.
-; Thanks to Tom Joyce for creating a prototype
-; from which this program was derived.
-; Last update: 9/24/01
 .386
 .model flat, stdcall
 option casemap: none
@@ -48,7 +43,7 @@ MSGStruct ENDS
 MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
 +WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
 
-;函数引入，用于后面翻译键盘输入为字符�?
+;函数引入，用于后面翻译键盘输入为字符码
 TranslateMessage PROTO STDCALL :DWORD
 SetTimer PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 KillTimer PROTO STDCALL :DWORD,:DWORD
@@ -67,10 +62,13 @@ BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DW
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
-SRCCOPY		EQU		000cc0020h
+PaintProc PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
+
 BLACK_BRUSH           EQU 4
 SYSTEM_FIXED_FONT     EQU 16
 
+WINDOW_WIDTH	EQU		640
+WINDOW_HEIGHT	EQU		480
 
 ;固定参数，用于后面识别键盘按下与抬起
 WM_PAINT		EQU		00000000fh
@@ -104,6 +102,10 @@ ErrorTitle  BYTE "Error",0
 WindowName  BYTE "ASM Windows App",0
 className   BYTE "ASMWin",0
 
+IDB_PNG1_PATH BYTE "..\Project1\image\background.jpg",0  ;暂时写成这样便于测试
+IDB_PNG2_PATH BYTE "..\Project1\image\whiteblock.png",0
+IDR_BG1_PATH BYTE "..\Project1\image\background.jpg",0
+
 ; Define the Application's Window class structure.
 MainWin WNDCLASS <NULL,WinProc,NULL,NULL,NULL,NULL,NULL, \
 	COLOR_WINDOW,NULL,className>
@@ -122,6 +124,7 @@ holdft DWORD ?
 ps PAINTSTRUCT <>
 
 WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+map			WORD 300 DUP(1) ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 
 ; 按键是否按下的指示变量
 UpKeyHold DWORD 0 
@@ -158,11 +161,10 @@ WinMain PROC
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
-		INVOKE CreateWindowEx, 0, ADDR className,
-		ADDR WindowName,MAIN_WINDOW_STYLE,
-		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
-		CW_USEDEFAULT,NULL,NULL,hInstance,NULL
-		mov hMainWnd,eax
+	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
+	ADDR WindowName,WS_OVERLAPPEDWINDOW,100,100,
+	WINDOW_WIDTH,WINDOW_HEIGHT,NULL,NULL,hInstance,NULL
+	mov hMainWnd,eax
 
 	; If CreateWindowEx failed, display a message & exit.
 		.IF eax == 0
@@ -265,7 +267,7 @@ WinProc PROC,
 		invoke CreateCompatibleDC,hdc
 		mov hdcMem,eax
 
-		invoke CreateCompatibleBitmap,hdc,640,480
+		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
 		mov hbitmap,eax
 
 		invoke SelectObject,hdcMem,hbitmap
@@ -285,31 +287,7 @@ WinProc PROC,
 		jmp WinProcExit
 
 	PaintMessage:
-		invoke BeginPaint,hWnd,offset ps
-		mov hdc,eax
-
-		invoke GetStockObject,BLACK_BRUSH
-		
-		invoke SelectObject,hdcMem,eax
-		mov holdbr,eax
-		
-		invoke GetStockObject,SYSTEM_FIXED_FONT
-		
-		invoke SelectObject,hdcMem,eax
-		mov holdft,eax
-
-		invoke Rectangle,hdcMem,0,0,640,480
-
-		call DrawUI
-		
-		invoke SelectObject,hdcMem,holdbr
-
-		invoke SelectObject,hdcMem,holdft
-
-		invoke BitBlt,hdc,0,0,640,480,hdcMem,0,0,SRCCOPY
-		
-		invoke EndPaint,hWnd,offset ps
-
+		INVOKE PaintProc, hWnd, localMsg, wParam, lParam
 		jmp WinProcExit
 
 	OtherMessage:
@@ -345,18 +323,115 @@ ErrorHandler PROC
 		ret
 ErrorHandler ENDP
 
-DrawUI PROC
-	;	cmp WhichMenu,0
-	;	je DrawMain
-	
-	;DrawMain:
-	;	invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
+PaintProc PROC USES ecx eax ebx esi,
+	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 
-	;	invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
+	local @ps: PAINTSTRUCT, @hdcMem: DWORD, @hdcMem2: DWORD; 创建两个句柄分别用来指向两张图（通常hdcmem是黑格，hdcmem2是白格）
+	local whitePicBitmap: DWORD, blackPicBitmap: DWORD, bgPicBitmap: DWORD
+	invoke  BeginPaint, hWnd, addr @ps
+	mov hdc, eax
 
-	;	jmp DrawMenuSelect
+	.IF WhichMenu == 0
+		invoke GetStockObject,BLACK_BRUSH
+		
+		invoke SelectObject,hdcMem,eax
+		mov holdbr,eax
+		
+		invoke GetStockObject,SYSTEM_FIXED_FONT
+		
+		invoke SelectObject,hdcMem,eax
+		mov holdft,eax
 
+		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
+
+		;invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
+
+		;invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
+
+		;jmp DrawMenuSelect
+		
+		invoke SelectObject,hdcMem,holdbr
+
+		invoke SelectObject,hdcMem,holdft
+
+		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
+
+	.ELSEIF WhichMenu == 2
+		INVOKE CreateCompatibleDC, hdc
+		mov @hdcMem, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov @hdcMem2, eax 
+
+		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov blackPicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov whitePicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
+		mov bgPicBitmap, eax
+
+		INVOKE SelectObject, @hdcMem, bgPicBitmap
+		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hdcMem, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
+
+		INVOKE SelectObject, @hdcMem, blackPicBitmap
+		INVOKE SelectObject, @hdcMem2, whitePicBitmap
+
+		mov	esi, offset map
+		mov ecx, 15
+	Lx: ;按行loop
+		push ecx
+		mov ecx, 20
+	Ly: ;按列loop
+		mov ax, [esi]
+		.IF ax == 1
+			mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
+			sub ah, al
+			mov al, ah
+			mov ah, 0
+			add al, 20
+			sal ax, 5
+			pop ebx
+			push ebx  ;将外层循环的ecx给ebx
+			sub bh, bl
+			mov bl, bh
+			mov bh, 0
+			add bl, 15
+			sal bx, 5
+			push ecx
+			INVOKE BitBlt, hdc, ax, bx, 32, 32, @hdcMem, 0, 0, SRCCOPY
+			pop ecx
+		.ELSEIF ax == 2
+			mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
+			sub ah, al
+			mov al, ah
+			mov ah, 0
+			add al, 20
+			sal ax, 5
+			pop ebx
+			push ebx  ;将外层循环的ecx给ebx
+			sub bh, bl
+			mov bl, bh
+			mov bh, 0
+			add bl, 15
+			sal bx, 5
+			push ecx
+			INVOKE BitBlt, hdc, ax, bx, 32, 32, @hdcMem2, 0, 0, SRCCOPY
+			pop ecx
+		.ENDIF
+		add esi, type map
+		dec ecx
+		cmp ecx, 0
+		jne Ly
+		pop ecx
+		dec ecx
+		cmp ecx, 0
+		jne Lx
+
+		invoke DeleteDC, @hdcMem
+		invoke DeleteDC, @hdcMem2
+	.ENDIF
+
+	invoke EndPaint, hWnd, addr @ps
 	ret
-DrawUI ENDP
+PaintProc ENDP
 
 END WinMain
