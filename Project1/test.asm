@@ -137,7 +137,7 @@ EnterKeyHold DWORD 0
 
 ;=================== CODE =========================
 .code
-WinMain PROC
+WinMain:
 	; Get a handle to the current process.
 		INVOKE GetModuleHandle, NULL
 		mov hInstance, eax
@@ -195,17 +195,18 @@ WinMain PROC
 
 	Exit_Program:
 		INVOKE ExitProcess,0
-WinMain ENDP
 
 ;-----------------------------------------------------
-WinProc PROC,
-	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
+WinProc:
 	; The application's message handler, which handles
 	; application-specific messages. All other messages
 	; are forwarded to the default Windows message
 	; handler.
 	;-----------------------------------------------------
-		mov eax, localMsg
+		push ebp
+		mov ebp,esp
+
+		mov eax, [ebp+12]
 		
 		;判断是否为键盘按下操作
 		cmp eax,WM_KEYDOWN
@@ -225,16 +226,16 @@ WinProc PROC,
 		jmp OtherMessage			; other message?
 
 	KeyDownMessage:
-		mov eax,[localMsg+4] ;将按键的值转给eax
+		mov eax,[ebp+16] ;将按键的值转给eax
 
 		cmp eax,32         ;识别空格键
 		jne WinProcExit
 		mov UpKeyHold,1   ;设置标识
-		INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+		INVOKE MessageBox, hMainWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 		jmp WinProcExit
 
 	KeyUpMessage:
-		mov eax,[localMsg+4]  ;将按键的值转给eax
+		mov eax,[ebp+16]  ;将按键的值转给eax
  
 		cmp eax,32          ;识别空格键
 		jne WinProcExit 
@@ -242,16 +243,16 @@ WinProc PROC,
 		jmp WinProcExit
 
 	Lmousedown:
-		INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
+		INVOKE MessageBox, hMainWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
 		jmp WinProcExit
 
 	CreateWindowMessage:
-		mov eax,[localMsg-4]
-		mov hWnd,eax
+		mov eax,[ebp+8]
+		mov hMainWnd,eax
 
-		invoke SetTimer,hWnd,1,30,NULL
+		invoke SetTimer,hMainWnd,1,30,NULL
 
-		invoke GetDC,hWnd
+		invoke GetDC,hMainWnd
 		mov hdc,eax
 
 		invoke CreateCompatibleDC,eax
@@ -274,18 +275,18 @@ WinProc PROC,
 
 		invoke SetBkColor,hdcMem,0
 
-		invoke ReleaseDC,hWnd,hdc
+		invoke ReleaseDC,hMainWnd,hdc
 
 		jmp WinProcExit
 
 	CloseWindowMessage:
 		INVOKE PostQuitMessage,0
 
-		invoke KillTimer,hWnd,1
+		invoke KillTimer,hMainWnd,1
 		jmp WinProcExit
 
 	PaintMessage:
-		invoke BeginPaint,hWnd,offset ps
+		invoke BeginPaint,hMainWnd,offset ps
 		mov hdc,eax
 
 		invoke GetStockObject,BLACK_BRUSH
@@ -308,44 +309,23 @@ WinProc PROC,
 
 		invoke BitBlt,hdc,0,0,640,480,hdcMem,0,0,SRCCOPY
 		
-		invoke EndPaint,hWnd,offset ps
+		invoke EndPaint,hMainWnd,offset ps
 
 		jmp WinProcExit
 
 	OtherMessage:
-		INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
+		push [ebp+20]
+		push [ebp+16]
+		push [ebp+12]
+		push [ebp+8]
 		jmp WinProcExit
 
 	WinProcExit:
+		mov esp,ebp
+		pop ebp
 		ret
-WinProc ENDP
-
 ;---------------------------------------------------
-ErrorHandler PROC
-	; Display the appropriate system error message.
-	;---------------------------------------------------
-	.data
-	pErrorMsg  DWORD ?		; ptr to error message
-	messageID  DWORD ?
-	.code
-		INVOKE GetLastError	; Returns message ID in EAX
-		mov messageID,eax
-
-		; Get the corresponding message string.
-		INVOKE FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER + \
-		FORMAT_MESSAGE_FROM_SYSTEM,NULL,messageID,NULL,
-		ADDR pErrorMsg,NULL,NULL
-
-		; Display the error message.
-		INVOKE MessageBox,NULL, pErrorMsg, ADDR ErrorTitle,
-		MB_ICONERROR+MB_OK
-
-		; Free the error message string.
-		INVOKE LocalFree, pErrorMsg
-		ret
-ErrorHandler ENDP
-
-DrawUI PROC
+DrawUI:
 	;	cmp WhichMenu,0
 	;	je DrawMain
 	
@@ -357,6 +337,5 @@ DrawUI PROC
 	;	jmp DrawMenuSelect
 
 	ret
-DrawUI ENDP
 
 END WinMain
