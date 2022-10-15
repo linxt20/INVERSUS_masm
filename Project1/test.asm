@@ -9,6 +9,7 @@ TITLE Windows Application                   (WinApp.asm)
 .model flat, stdcall
 option casemap: none
 
+; 头文件区域
 include windows.inc
 include gdi32.inc
 includelib gdi32.lib
@@ -22,7 +23,10 @@ include msvcrt.inc
 includelib msvcrt.lib
 include shell32.inc
 includelib shell32.lib
+include msimg32.inc
+includelib msimg32.lib
 
+; 结构区域
 WNDCLASS STRUC
 	style DWORD ?
 	lpfnWndProc DWORD ?
@@ -45,9 +49,24 @@ MSGStruct STRUCT
 	msgPt POINT <>
 MSGStruct ENDS
 
+; 固定变量区域
 MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
 +WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
 
+SYSTEM_FIXED_FONT     EQU 16
+
+;固定参数，用于后面识别键盘按下与抬起
+WM_PAINT		EQU		00000000fh
+WM_KEYDOWN		EQU		000000100h
+WM_KEYUP		EQU		000000101h
+
+IDB_PNG1         EQU               103
+IDB_PNG2          EQU              104
+IDR_BACKGROUND1      EQU           105
+IDB_BITMAP1        EQU             106
+IDB_BITMAP2         EQU            107
+
+; 函数声明区域
 ;函数引入，用于后面翻译键盘输入为字符�?
 TranslateMessage PROTO STDCALL :DWORD
 SetTimer PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
@@ -67,15 +86,9 @@ BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DW
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
-SRCCOPY		EQU		000cc0020h
-BLACK_BRUSH           EQU 4
-SYSTEM_FIXED_FONT     EQU 16
-
-
-;固定参数，用于后面识别键盘按下与抬起
-WM_PAINT		EQU		00000000fh
-WM_KEYDOWN		EQU		000000100h
-WM_KEYUP		EQU		000000101h
+;自定义函数声明
+DrawLine PROTO :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+DrawSpirit PROTO :DWORD,:DWORD,:DWORD
 
 ;==================== DATA =======================
 .data
@@ -122,6 +135,7 @@ holdft DWORD ?
 ps PAINTSTRUCT <>
 
 WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+SelectMenu DWORD 0			; 正在选择的菜单项
 
 ; 按键是否按下的指示变量
 UpKeyHold DWORD 0 
@@ -137,7 +151,7 @@ EnterKeyHold DWORD 0
 
 ;=================== CODE =========================
 .code
-WinMain:
+WinMain PROC
 	; Get a handle to the current process.
 		INVOKE GetModuleHandle, NULL
 		mov hInstance, eax
@@ -158,10 +172,7 @@ WinMain:
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
-		INVOKE CreateWindowEx, 0, ADDR className,
-		ADDR WindowName,MAIN_WINDOW_STYLE,
-		CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,
-		CW_USEDEFAULT,NULL,NULL,hInstance,NULL
+		INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,ADDR WindowName,WS_OVERLAPPEDWINDOW,100,100,900,900,NULL,NULL,hInstance,NULL
 		mov hMainWnd,eax
 
 	; If CreateWindowEx failed, display a message & exit.
@@ -195,18 +206,17 @@ WinMain:
 
 	Exit_Program:
 		INVOKE ExitProcess,0
+WinMain ENDP
 
 ;-----------------------------------------------------
-WinProc:
+WinProc PROC,
+	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 	; The application's message handler, which handles
 	; application-specific messages. All other messages
 	; are forwarded to the default Windows message
 	; handler.
 	;-----------------------------------------------------
-		push ebp
-		mov ebp,esp
-
-		mov eax, [ebp+12]
+		mov eax, localMsg
 		
 		;判断是否为键盘按下操作
 		cmp eax,WM_KEYDOWN
@@ -226,16 +236,16 @@ WinProc:
 		jmp OtherMessage			; other message?
 
 	KeyDownMessage:
-		mov eax,[ebp+16] ;将按键的值转给eax
+		mov eax,[localMsg+4] ;将按键的值转给eax
 
 		cmp eax,32         ;识别空格键
 		jne WinProcExit
 		mov UpKeyHold,1   ;设置标识
-		INVOKE MessageBox, hMainWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+		INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 		jmp WinProcExit
 
 	KeyUpMessage:
-		mov eax,[ebp+16]  ;将按键的值转给eax
+		mov eax,[localMsg+4]  ;将按键的值转给eax
  
 		cmp eax,32          ;识别空格键
 		jne WinProcExit 
@@ -243,22 +253,22 @@ WinProc:
 		jmp WinProcExit
 
 	Lmousedown:
-		INVOKE MessageBox, hMainWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
+		INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
 		jmp WinProcExit
 
 	CreateWindowMessage:
-		mov eax,[ebp+8]
-		mov hMainWnd,eax
+		mov eax,[localMsg-4]
+		mov hWnd,eax
 
-		invoke SetTimer,hMainWnd,1,30,NULL
+		invoke SetTimer,hWnd,1,30,NULL
 
-		invoke GetDC,hMainWnd
+		invoke GetDC,hWnd
 		mov hdc,eax
 
 		invoke CreateCompatibleDC,eax
 		mov hdcPic,eax
 
-		invoke LoadImageA,hInstance,1001,0,0,0,0
+		invoke LoadBitmap,hInstance,IDB_BITMAP2
 		mov hbitmap,eax
 
 		invoke SelectObject,hdcPic,hbitmap
@@ -271,25 +281,25 @@ WinProc:
 
 		invoke SelectObject,hdcMem,hbitmap
 
-		invoke SetTextColor,hdcMem,0
+		invoke SetTextColor,hdcMem,0FFFFFFh
 
 		invoke SetBkColor,hdcMem,0
 
-		invoke ReleaseDC,hMainWnd,hdc
+		invoke ReleaseDC,hWnd,hdc
 
 		jmp WinProcExit
 
 	CloseWindowMessage:
 		INVOKE PostQuitMessage,0
 
-		invoke KillTimer,hMainWnd,1
+		invoke KillTimer,hWnd,1
 		jmp WinProcExit
 
 	PaintMessage:
-		invoke BeginPaint,hMainWnd,offset ps
+		invoke BeginPaint,hWnd,offset ps
 		mov hdc,eax
 
-		invoke GetStockObject,BLACK_BRUSH
+		invoke GetStockObject,WHITE_BRUSH
 		
 		invoke SelectObject,hdcMem,eax
 		mov holdbr,eax
@@ -299,7 +309,7 @@ WinProc:
 		invoke SelectObject,hdcMem,eax
 		mov holdft,eax
 
-		invoke Rectangle,hdcMem,0,0,640,480
+		invoke Rectangle,hdcMem,100,100,640,480
 
 		call DrawUI
 		
@@ -307,35 +317,47 @@ WinProc:
 
 		invoke SelectObject,hdcMem,holdft
 
-		invoke BitBlt,hdc,0,0,640,480,hdcMem,0,0,SRCCOPY
+		invoke BitBlt,hdc,0,0,300,300,hdcMem,50,50,SRCCOPY
 		
-		invoke EndPaint,hMainWnd,offset ps
+		invoke EndPaint,hWnd,offset ps
 
 		jmp WinProcExit
 
 	OtherMessage:
-		push [ebp+20]
-		push [ebp+16]
-		push [ebp+12]
-		push [ebp+8]
+		INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
 		jmp WinProcExit
 
 	WinProcExit:
-		mov esp,ebp
-		pop ebp
 		ret
+WinProc ENDP
+
 ;---------------------------------------------------
-DrawUI:
-	;	cmp WhichMenu,0
-	;	je DrawMain
-	
-	;DrawMain:
-	;	invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
+ErrorHandler PROC
+	; Display the appropriate system error message.
+	;---------------------------------------------------
+	.data
+	pErrorMsg  DWORD ?		; ptr to error message
+	messageID  DWORD ?
+	.code
+		INVOKE GetLastError	; Returns message ID in EAX
+		mov messageID,eax
 
-	;	invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
+		; Get the corresponding message string.
+		INVOKE FormatMessage, FORMAT_MESSAGE_ALLOCATE_BUFFER + \
+		FORMAT_MESSAGE_FROM_SYSTEM,NULL,messageID,NULL,
+		ADDR pErrorMsg,NULL,NULL
 
-	;	jmp DrawMenuSelect
+		; Display the error message.
+		INVOKE MessageBox,NULL, pErrorMsg, ADDR ErrorTitle,
+		MB_ICONERROR+MB_OK
 
-	ret
+		; Free the error message string.
+		INVOKE LocalFree, pErrorMsg
+		ret
+ErrorHandler ENDP
+
+DrawUI PROC
+		ret
+DrawUI ENDP 
 
 END WinMain
