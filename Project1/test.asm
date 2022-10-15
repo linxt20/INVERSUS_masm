@@ -345,4 +345,18 @@ ErrorHandler PROC
 		ret
 ErrorHandler ENDP
 
+DrawUI PROC
+	;	cmp WhichMenu,0
+	;	je DrawMain
+	
+	;DrawMain:
+	;	invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
+
+	;	invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
+
+	;	jmp DrawMenuSelect
+
+	ret
+DrawUI ENDP
+
 END WinMain
