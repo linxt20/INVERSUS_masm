@@ -5,9 +5,48 @@ TITLE Windows Application                   (WinApp.asm)
 ; Thanks to Tom Joyce for creating a prototype
 ; from which this program was derived.
 ; Last update: 9/24/01
+.386
+.model flat, stdcall
+option casemap: none
 
-INCLUDE Irvine32.inc
-INCLUDE GraphWin.inc
+include windows.inc
+include gdi32.inc
+includelib gdi32.lib
+include user32.inc
+includelib user32.lib
+include kernel32.inc
+includelib kernel32.lib
+include masm32.inc
+includelib masm32.lib
+include msvcrt.inc
+includelib msvcrt.lib
+include shell32.inc
+includelib shell32.lib
+
+WNDCLASS STRUC
+	style DWORD ?
+	lpfnWndProc DWORD ?
+	cbClsExtra DWORD ?
+	cbWndExtra DWORD ?
+	hInstance DWORD ?
+	hIcon DWORD ?
+	hCursor DWORD ?
+	hbrBackground DWORD ?
+	lpszMenuName DWORD ?
+	lpszClassName DWORD ?
+WNDCLASS ENDS
+
+MSGStruct STRUCT
+	msgWnd DWORD ?
+	msgMessage DWORD ?
+	msgWparam DWORD ?
+	msgLparam DWORD ?
+	msgTime DWORD ?
+	msgPt POINT <>
+MSGStruct ENDS
+
+MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
++WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
 
 ;函数引入，用于后面翻译键盘输入为字符�?
 TranslateMessage PROTO STDCALL :DWORD
@@ -15,16 +54,26 @@ SetTimer PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 KillTimer PROTO STDCALL :DWORD,:DWORD
 
 GetDC PROTO STDCALL :DWORD
+GetStockObject PROTO STDCALL :DWORD
 ReleaseDC PROTO STDCALL :DWORD,:DWORD
 LoadImageA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+BeginPaint PROTO STDCALL :DWORD,:DWORD
+EndPaint PROTO STDCALL :DWORD,:DWORD
 
 CreateCompatibleDC PROTO STDCALL: DWORD
 CreateCompatibleBitmap PROTO STDCALL :DWORD,:DWORD,:DWORD
 SelectObject PROTO STDCALL :DWORD,:DWORD
-
+BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 SetBkColor PROTO STDCALL :DWORD,:DWORD
+Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+
+SRCCOPY		EQU		000cc0020h
+BLACK_BRUSH           EQU 4
+SYSTEM_FIXED_FONT     EQU 16
+
 
 ;固定参数，用于后面识别键盘按下与抬起
+WM_PAINT		EQU		00000000fh
 WM_KEYDOWN		EQU		000000100h
 WM_KEYUP		EQU		000000101h
 
@@ -68,6 +117,11 @@ hbitmap DWORD ?
 hdcMem DWORD ?
 hdcPic DWORD ?
 hdc DWORD ?
+holdbr DWORD ?
+holdft DWORD ?
+ps PAINTSTRUCT <>
+
+WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
 
 ; 按键是否按下的指示变量
 UpKeyHold DWORD 0 
@@ -165,6 +219,9 @@ WinProc PROC,
 		je CreateWindowMessage	  
 		cmp eax,WM_CLOSE		 ; close window?
 		je CloseWindowMessage
+		; 参照坦克大战部分画图测试
+		cmp eax,WM_PAINT
+		je PaintMessage
 		jmp OtherMessage			; other message?
 
 	KeyDownMessage:
@@ -213,7 +270,7 @@ WinProc PROC,
 
 		invoke SelectObject,hdcMem,hbitmap
 
-		;invoke SetTextColor,hdcMem,0
+		invoke SetTextColor,hdcMem,0
 
 		invoke SetBkColor,hdcMem,0
 
@@ -225,6 +282,34 @@ WinProc PROC,
 		INVOKE PostQuitMessage,0
 
 		invoke KillTimer,hWnd,1
+		jmp WinProcExit
+
+	PaintMessage:
+		invoke BeginPaint,hWnd,offset ps
+		mov hdc,eax
+
+		invoke GetStockObject,BLACK_BRUSH
+		
+		invoke SelectObject,hdcMem,eax
+		mov holdbr,eax
+		
+		invoke GetStockObject,SYSTEM_FIXED_FONT
+		
+		invoke SelectObject,hdcMem,eax
+		mov holdft,eax
+
+		invoke Rectangle,hdcMem,0,0,640,480
+
+		call DrawUI
+		
+		invoke SelectObject,hdcMem,holdbr
+
+		invoke SelectObject,hdcMem,holdft
+
+		invoke BitBlt,hdc,0,0,640,480,hdcMem,0,0,SRCCOPY
+		
+		invoke EndPaint,hWnd,offset ps
+
 		jmp WinProcExit
 
 	OtherMessage:
