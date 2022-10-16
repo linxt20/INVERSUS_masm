@@ -61,8 +61,6 @@ SelectObject PROTO STDCALL :DWORD,:DWORD
 BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
-TextOutA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
-CreateFontA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 PaintProc PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 
@@ -104,14 +102,6 @@ ErrorTitle  BYTE "Error",0
 WindowName  BYTE "ASM Windows App",0
 className   BYTE "ASMWin",0
 
-startText BYTE "start",0
-helpText BYTE "help",0
-exitText BYTE "exit",0
-PVPText BYTE "P V P",0
-PVEText BYTE "P V E",0
-BackText BYTE "<-back",0
-
-
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
 IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
 IDR_BG1_PATH BYTE "..\Project1\image\background.jpg",0
@@ -124,17 +114,22 @@ msg	      MSGStruct <>
 winRect   RECT <>
 hMainWnd  DWORD ?
 hInstance DWORD ?
-
+whitePicBitmap DWORD ?
+blackPicBitmap DWORD ? 
+bgPicBitmap DWORD ?
 hbitmap DWORD ?
-hdcMem DWORD ?
 hdcPic DWORD ?
 hdc DWORD ?
 holdbr DWORD ?
 holdft DWORD ?
 ps PAINTSTRUCT <>
+hdcMem DWORD ?
+hdcMem2 DWORD ?
 
-WhichMenu DWORD 1			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
-SelectMenu DWORD 0			; 正在选择的菜单项
+WhichMenu DWORD 2			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+
+blackblock WORD 164,164,24
+whiteblock WORD 452,292,24
 
 ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 map		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -188,9 +183,11 @@ WinMain PROC
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
+	;禁止窗口大小变化操作 把WS_EX_CLIENTEDGE改成0，把WS_OVERLAPPEDWINDOW改成WS_BORDER+WS_CAPTION+WS_SYSMENU
 	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
-	ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
-	WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
+	 ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
+	 WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
+
 	mov hMainWnd,eax
 
 	; If CreateWindowEx failed, display a message & exit.
@@ -259,56 +256,56 @@ WinProc PROC,
 
 			cmp eax,38  ;识别向上方向键
 			jne @nup1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov UpKeyHold,1
 		@nup1:
 			cmp eax,40  ;识别向下方向键
 			jne @ndown1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov DownKeyHold,1
 		@ndown1:
 			cmp eax,37  ;识别向左方向键
 			jne @nleft1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov LeftKeyHold,1
 		@nleft1:
 			cmp eax,39   ;识别向右方向键
 			jne @nright1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov RightKeyHold,1
 		@nright1:
 			cmp eax,32  ;识别空格键
 			jne @nspace1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov SpaceKeyHold,1
 		@nspace1:
 			cmp eax,13  ;识别enter键
 			jne @nenter1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov EnterKeyHold,1
 		@nenter1:
 			cmp eax,27 ;识别esc键
 			jne @nescape1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 		@nescape1: 
 			cmp eax,65 ;识别a键
 			jne @na1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov AKeyHold,1
 		@na1:
 			cmp eax,68 ;识别d键
 			jne @nd1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov DKeyHold,1
 		@nd1:
 			cmp eax,83 ;识别s键
 			jne @ns1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov SKeyHold,1
 		@ns1:
 			cmp eax,87 ;识别w键
 			jne @nw1
-			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			;INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
 			mov WKeyHold,1
 		@nw1:		
 			jmp WinProcExit
@@ -366,7 +363,7 @@ WinProc PROC,
 		mov eax,[localMsg-4]
 		mov hWnd,eax
 
-		invoke SetTimer,hWnd,1,30,NULL
+		invoke SetTimer,hWnd,1,100,NULL
 
 		invoke GetDC,hWnd
 		mov hdc,eax
@@ -387,7 +384,18 @@ WinProc PROC,
 
 		invoke SelectObject,hdcMem,hbitmap
 
+		invoke SetTextColor,hdcMem,0
+
+		invoke SetBkColor,hdcMem,0
+
 		invoke ReleaseDC,hWnd,hdc
+
+		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov blackPicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov whitePicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
+		mov bgPicBitmap, eax
 
 		jmp WinProcExit
 
@@ -403,9 +411,9 @@ WinProc PROC,
 
 	TimerMessage:
 	
-		;call TimerTick
+		call TimerPROC
 
-		;invoke RedrawWindow,hWnd,NULL,NULL,1
+		invoke RedrawWindow,hWnd,NULL,NULL,1
 
 		jmp WinProcExit
 
@@ -445,105 +453,45 @@ ErrorHandler ENDP
 PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 
-	local @ps: PAINTSTRUCT, @hdcMem: DWORD, @hdcMem2: DWORD; 创建两个句柄分别用来指向两张图（通常hdcmem是黑格，hdcmem2是白格）
-	local whitePicBitmap: DWORD, blackPicBitmap: DWORD, bgPicBitmap: DWORD
-	local font: DWORD
-
-	invoke  BeginPaint, hWnd, addr @ps
+	invoke  BeginPaint, hWnd, addr ps
 	mov hdc, eax
 
 	.IF WhichMenu == 0
-
 		invoke GetStockObject,BLACK_BRUSH
+		
 		invoke SelectObject,hdcMem,eax
 		mov holdbr,eax
-
-		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMem,holdbr
-
-		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
-
-		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-		mov font, eax
-		INVOKE SelectObject,hdc, eax
-
-		INVOKE SetTextColor,hdc,00FFFFFFh
-		INVOKE SetBkColor,hdc,0
-
-		;根据选择菜单，分别绘制不同样式的菜单项
-		.IF SelectMenu == 0
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
-		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
-		.ELSEIF SelectMenu == 2
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
-		.ENDIF
-
-		INVOKE DeleteObject,font
-
-	.ELSEIF WhichMenu == 1
-
-		invoke GetStockObject,BLACK_BRUSH
+		
+		invoke GetStockObject,SYSTEM_FIXED_FONT
+		
 		invoke SelectObject,hdcMem,eax
-		mov holdbr,eax
+		mov holdft,eax
 
 		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
+
+		;invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
+
+		;invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
+
+		;jmp DrawMenuSelect
+		
 		invoke SelectObject,hdcMem,holdbr
 
+		invoke SelectObject,hdcMem,holdft
+
 		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
-
-		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-		mov font, eax
-		INVOKE SelectObject,hdc, eax
-
-		INVOKE SetTextColor,hdc,00FFFFFFh
-		INVOKE SetBkColor,hdc,0
-
-		;根据选择菜单，分别绘制不同样式的菜单项
-		.IF SelectMenu == 0
-			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
-		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
-		.ENDIF
-
-		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 2
 		INVOKE CreateCompatibleDC, hdc
-		mov @hdcMem, eax
+		mov hdcMem, eax
 		INVOKE CreateCompatibleDC, hdc
-		mov @hdcMem2, eax 
+		mov hdcMem2, eax 
 
-		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov blackPicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov whitePicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
-		mov bgPicBitmap, eax
+		INVOKE SelectObject, hdcMem, bgPicBitmap
+		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
 
-		INVOKE SelectObject, @hdcMem, bgPicBitmap
-		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, @hdcMem, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
-
-		INVOKE SelectObject, @hdcMem, blackPicBitmap
-		INVOKE SelectObject, @hdcMem2, whitePicBitmap
+		INVOKE SelectObject, hdcMem, blackPicBitmap
+		INVOKE SelectObject, hdcMem2, whitePicBitmap
 
 		mov	esi, offset map
 		mov ecx, 15
@@ -567,7 +515,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 31, 31, @hdcMem, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdc, ax, bx, 31, 31, hdcMem, 0, 0, SRCCOPY
 			pop ecx
 		.ELSEIF ax == 2
 			mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
@@ -584,7 +532,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 31, 31, @hdcMem2, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdc, ax, bx, 31, 31, hdcMem2, 0, 0, SRCCOPY
 			pop ecx
 		.ENDIF
 		add esi, type map
@@ -596,12 +544,74 @@ PaintProc PROC USES ecx eax ebx esi,
 		cmp ecx, 0
 		jne Lx
 
-		invoke DeleteDC, @hdcMem
-		invoke DeleteDC, @hdcMem2
+		INVOKE BitBlt, hdc, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMem, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdc, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMem2, 0, 0, SRCCOPY
+
+		invoke DeleteDC, hdcMem
+		invoke DeleteDC, hdcMem2
 	.ENDIF
 
-	invoke EndPaint, hWnd, addr @ps
+	invoke EndPaint, hWnd, addr ps
 	ret
 PaintProc ENDP
+
+TimerPROC PROC
+		cmp WhichMenu,2
+		je TimerTickDontReturn
+		jmp TimerTickReturn
+	TimerTickDontReturn:
+		
+			cmp UpKeyHold,1
+			jne TT@1
+			sub [whiteblock+2],2
+
+		TT@1:
+			cmp DownKeyHold,1
+			jne TT@2
+			add [whiteblock+2],2
+		
+		TT@2:
+			cmp LeftKeyHold,1
+			jne TT@3
+			sub [whiteblock],2
+		
+		TT@3:
+			cmp RightKeyHold,1
+			jne TT@4
+			add [whiteblock],2
+		
+		TT@4:
+			cmp EnterKeyHold,1
+			je TT@5
+
+		TT@5:
+			cmp WKeyHold,1
+			jne TT@6
+			sub [blackblock+2],2
+		
+		TT@6:
+			cmp SKeyHold,1
+			jne TT@7
+			add [blackblock+2],2
+
+		TT@7:
+			cmp AKeyHold,1
+			jne TT@8
+			sub [blackblock],2
+
+		TT@8:
+			cmp DKeyHold,1
+			jne TT@9
+			add [blackblock],2
+		
+		TT@9:
+			;cmp SpaceKeyHold,1
+			;jne TT@10
+
+	TimerTickReturn:
+		ret
+
+TimerPROC ENDP
+
 
 END WinMain
