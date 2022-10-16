@@ -62,6 +62,7 @@ BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DW
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 TextOutA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+CreateFontA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 PaintProc PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 
@@ -106,6 +107,10 @@ className   BYTE "ASMWin",0
 startText BYTE "start",0
 helpText BYTE "help",0
 exitText BYTE "exit",0
+PVPText BYTE "P V P",0
+PVEText BYTE "P V E",0
+BackText BYTE "<-back",0
+
 
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
 IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
@@ -128,7 +133,7 @@ holdbr DWORD ?
 holdft DWORD ?
 ps PAINTSTRUCT <>
 
-WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+WhichMenu DWORD 1			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
 SelectMenu DWORD 0			; 正在选择的菜单项
 
 ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
@@ -382,10 +387,6 @@ WinProc PROC,
 
 		invoke SelectObject,hdcMem,hbitmap
 
-		invoke SetTextColor,hdcMem,00FFFFFFh
-
-		invoke SetBkColor,hdcMem,0
-
 		invoke ReleaseDC,hWnd,hdc
 
 		jmp WinProcExit
@@ -446,37 +447,84 @@ PaintProc PROC USES ecx eax ebx esi,
 
 	local @ps: PAINTSTRUCT, @hdcMem: DWORD, @hdcMem2: DWORD; 创建两个句柄分别用来指向两张图（通常hdcmem是黑格，hdcmem2是白格）
 	local whitePicBitmap: DWORD, blackPicBitmap: DWORD, bgPicBitmap: DWORD
+	local font: DWORD
+
 	invoke  BeginPaint, hWnd, addr @ps
 	mov hdc, eax
 
 	.IF WhichMenu == 0
+
 		invoke GetStockObject,BLACK_BRUSH
-		
 		invoke SelectObject,hdcMem,eax
 		mov holdbr,eax
-		
-		invoke GetStockObject,SYSTEM_FIXED_FONT
-		
-		invoke SelectObject,hdcMem,eax
-		mov holdft,eax
 
 		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
-
-		;invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
-
-		;invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
-
-		;jmp DrawMenuSelect
-		
 		invoke SelectObject,hdcMem,holdbr
-
-		invoke SelectObject,hdcMem,holdft
 
 		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
 
-		INVOKE TextOutA,hdc,298,208,offset startText,5  ;640/2-22=298,480/2-12-20=208
-		INVOKE TextOutA,hdc,298,228,offset helpText,4  ;640/2-22=298,480/2-12=228
-		INVOKE TextOutA,hdc,298,248,offset exitText,4  ;640/2-22=298,480/2-12+20=228
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font, eax
+		INVOKE SelectObject,hdc, eax
+
+		INVOKE SetTextColor,hdc,00FFFFFFh
+		INVOKE SetBkColor,hdc,0
+
+		;根据选择菜单，分别绘制不同样式的菜单项
+		.IF SelectMenu == 0
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+		.ELSEIF SelectMenu == 1
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+		.ELSEIF SelectMenu == 2
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+		.ENDIF
+
+		INVOKE DeleteObject,font
+
+	.ELSEIF WhichMenu == 1
+
+		invoke GetStockObject,BLACK_BRUSH
+		invoke SelectObject,hdcMem,eax
+		mov holdbr,eax
+
+		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
+		invoke SelectObject,hdcMem,holdbr
+
+		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
+
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font, eax
+		INVOKE SelectObject,hdc, eax
+
+		INVOKE SetTextColor,hdc,00FFFFFFh
+		INVOKE SetBkColor,hdc,0
+
+		;根据选择菜单，分别绘制不同样式的菜单项
+		.IF SelectMenu == 0
+			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
+		.ELSEIF SelectMenu == 1
+			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
+		.ENDIF
+
+		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 2
 		INVOKE CreateCompatibleDC, hdc
