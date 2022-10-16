@@ -131,7 +131,7 @@ ps PAINTSTRUCT <>
 hdcMem DWORD ?
 hdcMem2 DWORD ?
 
-WhichMenu DWORD 2			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
 SelectMenu DWORD 0			; 正在选择的菜单项
 
 blackblock WORD 164,164,24
@@ -395,13 +395,6 @@ WinProc PROC,
 
 		invoke ReleaseDC,hWnd,hdc
 
-		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov blackPicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov whitePicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
-		mov bgPicBitmap, eax
-
 		jmp WinProcExit
 
 	CloseWindowMessage:
@@ -542,6 +535,13 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMem2, eax 
 
+		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov blackPicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
+		mov whitePicBitmap, eax
+		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
+		mov bgPicBitmap, eax
+
 		INVOKE SelectObject, hdcMem, bgPicBitmap
 		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
 
@@ -611,11 +611,51 @@ PaintProc PROC USES ecx eax ebx esi,
 PaintProc ENDP
 
 TimerPROC PROC
-		cmp WhichMenu,2
-		je TimerTickDontReturn
-		jmp TimerTickReturn
-	TimerTickDontReturn:
-		
+
+	.IF WhichMenu == 0
+		.IF UpKeyHold == 1
+			.IF SelectMenu > 0
+				dec SelectMenu
+			.ENDIF
+		.ENDIF
+		.IF DownKeyHold == 1
+			.IF SelectMenu < 2
+				inc SelectMenu
+			.ENDIF
+		.ENDIF
+		.IF EnterKeyHold == 1
+			.IF SelectMenu == 0
+				inc WhichMenu
+				ret
+			.ELSEIF SelectMenu == 1
+				; 后续在这里添加“帮助”功能
+			.ELSE
+				INVOKE ExitProcess,0
+			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 1
+		.IF UpKeyHold == 1
+			.IF SelectMenu > 0
+				dec SelectMenu
+			.ENDIF
+		.ENDIF
+		.IF DownKeyHold == 1
+			.IF SelectMenu < 1
+				inc SelectMenu
+			.ENDIF
+		.ENDIF
+		.IF EnterKeyHold == 1
+			.IF SelectMenu == 0
+				inc WhichMenu
+				ret
+			.ELSEIF SelectMenu == 1
+				dec WhichMenu
+				dec SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 2
+
 			cmp UpKeyHold,1
 			jne TT@1
 			sub [whiteblock+2],2
@@ -663,8 +703,9 @@ TimerPROC PROC
 			;cmp SpaceKeyHold,1
 			;jne TT@10
 
-	TimerTickReturn:
-		ret
+	.ENDIF
+
+	ret
 
 TimerPROC ENDP
 
