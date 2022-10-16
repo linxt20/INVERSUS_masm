@@ -104,6 +104,8 @@ WindowName  BYTE "ASM Windows App",0
 className   BYTE "ASMWin",0
 
 startText BYTE "start",0
+helpText BYTE "help",0
+exitText BYTE "exit",0
 
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
 IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
@@ -181,9 +183,8 @@ WinMain PROC
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
-	;禁止窗口大小变化操作 把WS_EX_CLIENTEDGE改成0，把WS_OVERLAPPEDWINDOW改成WS_BORDER+WS_CAPTION+WS_SYSMENU
 	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
-	ADDR WindowName,WS_OVERLAPPEDWINDOW,100,100,
+	ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
 	WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
 	mov hMainWnd,eax
 
@@ -473,7 +474,9 @@ PaintProc PROC USES ecx eax ebx esi,
 
 		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
 
-		INVOKE TextOutA,hdc,298,228,offset startText,5  ;640/2-22=298,480/2-12=228
+		INVOKE TextOutA,hdc,298,208,offset startText,5  ;640/2-22=298,480/2-12-20=208
+		INVOKE TextOutA,hdc,298,228,offset helpText,4  ;640/2-22=298,480/2-12=228
+		INVOKE TextOutA,hdc,298,248,offset exitText,4  ;640/2-22=298,480/2-12+20=228
 
 	.ELSEIF WhichMenu == 2
 		INVOKE CreateCompatibleDC, hdc
