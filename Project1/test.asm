@@ -61,6 +61,7 @@ SelectObject PROTO STDCALL :DWORD,:DWORD
 BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+TextOutA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 PaintProc PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 
@@ -102,6 +103,8 @@ ErrorTitle  BYTE "Error",0
 WindowName  BYTE "ASM Windows App",0
 className   BYTE "ASMWin",0
 
+startText BYTE "start",0
+
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
 IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
 IDR_BG1_PATH BYTE "..\Project1\image\background.jpg",0
@@ -123,7 +126,9 @@ holdbr DWORD ?
 holdft DWORD ?
 ps PAINTSTRUCT <>
 
-WhichMenu DWORD 2			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+SelectMenu DWORD 0			; 正在选择的菜单项
+
 ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 map		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -376,7 +381,7 @@ WinProc PROC,
 
 		invoke SelectObject,hdcMem,hbitmap
 
-		invoke SetTextColor,hdcMem,0
+		invoke SetTextColor,hdcMem,00FFFFFFh
 
 		invoke SetBkColor,hdcMem,0
 
@@ -467,6 +472,8 @@ PaintProc PROC USES ecx eax ebx esi,
 		invoke SelectObject,hdcMem,holdft
 
 		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
+
+		INVOKE TextOutA,hdc,298,228,offset startText,5  ;640/2-22=298,480/2-12=228
 
 	.ELSEIF WhichMenu == 2
 		INVOKE CreateCompatibleDC, hdc
