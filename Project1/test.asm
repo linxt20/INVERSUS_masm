@@ -102,8 +102,8 @@ ErrorTitle  BYTE "Error",0
 WindowName  BYTE "ASM Windows App",0
 className   BYTE "ASMWin",0
 
-IDB_PNG1_PATH BYTE "..\Project1\image\background.jpg",0  ;暂时写成这样便于测试
-IDB_PNG2_PATH BYTE "..\Project1\image\whiteblock.png",0
+IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
+IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
 IDR_BG1_PATH BYTE "..\Project1\image\background.jpg",0
 
 ; Define the Application's Window class structure.
@@ -123,8 +123,23 @@ holdbr DWORD ?
 holdft DWORD ?
 ps PAINTSTRUCT <>
 
-WhichMenu DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
-map			WORD 300 DUP(1) ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
+WhichMenu DWORD 2			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
+map		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ; 按键是否按下的指示变量
 UpKeyHold DWORD 0 
@@ -161,9 +176,10 @@ WinMain PROC
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
+	;禁止窗口大小变化操作 把WS_EX_CLIENTEDGE改成0，把WS_OVERLAPPEDWINDOW改成WS_BORDER+WS_CAPTION+WS_SYSMENU
 	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
 	ADDR WindowName,WS_OVERLAPPEDWINDOW,100,100,
-	WINDOW_WIDTH,WINDOW_HEIGHT,NULL,NULL,hInstance,NULL
+	WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
 	mov hMainWnd,eax
 
 	; If CreateWindowEx failed, display a message & exit.
@@ -221,27 +237,115 @@ WinProc PROC,
 		je CreateWindowMessage	  
 		cmp eax,WM_CLOSE		 ; close window?
 		je CloseWindowMessage
-		; 参照坦克大战部分画图测试
 		cmp eax,WM_PAINT
 		je PaintMessage
+		cmp eax,WM_TIMER
+		je TimerMessage
 		jmp OtherMessage			; other message?
 
 	KeyDownMessage:
-		mov eax,[localMsg+4] ;将按键的值转给eax
+			mov eax,[localMsg+4] ;将按键的值转给eax
 
-		cmp eax,32         ;识别空格键
-		jne WinProcExit
-		mov UpKeyHold,1   ;设置标识
-		INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
-		jmp WinProcExit
+			cmp eax,38  ;识别向上方向键
+			jne @nup1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov UpKeyHold,1
+		@nup1:
+			cmp eax,40  ;识别向下方向键
+			jne @ndown1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov DownKeyHold,1
+		@ndown1:
+			cmp eax,37  ;识别向左方向键
+			jne @nleft1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov LeftKeyHold,1
+		@nleft1:
+			cmp eax,39   ;识别向右方向键
+			jne @nright1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov RightKeyHold,1
+		@nright1:
+			cmp eax,32  ;识别空格键
+			jne @nspace1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov SpaceKeyHold,1
+		@nspace1:
+			cmp eax,13  ;识别enter键
+			jne @nenter1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov EnterKeyHold,1
+		@nenter1:
+			cmp eax,27 ;识别esc键
+			jne @nescape1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+		@nescape1: 
+			cmp eax,65 ;识别a键
+			jne @na1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov AKeyHold,1
+		@na1:
+			cmp eax,68 ;识别d键
+			jne @nd1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov DKeyHold,1
+		@nd1:
+			cmp eax,83 ;识别s键
+			jne @ns1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov SKeyHold,1
+		@ns1:
+			cmp eax,87 ;识别w键
+			jne @nw1
+			INVOKE MessageBox, hWnd, ADDR buttonText, ADDR buttonTitle, MB_OK  ;消息弹窗
+			mov WKeyHold,1
+		@nw1:		
+			jmp WinProcExit
 
 	KeyUpMessage:
-		mov eax,[localMsg+4]  ;将按键的值转给eax
- 
-		cmp eax,32          ;识别空格键
-		jne WinProcExit 
-		mov UpKeyHold,0  ;取消标识
-		jmp WinProcExit
+			mov eax,[localMsg+4]  ;将按键的值转给eax
+	
+			cmp eax,38    ;识别向上方向键
+			jne @nup2
+			mov UpKeyHold,0
+		@nup2:
+			cmp eax,40   ;识别向下方向键
+			jne @ndown2
+			mov DownKeyHold,0
+		@ndown2:
+			cmp eax,37   ;识别向左方向键
+			jne @nleft2
+			mov LeftKeyHold,0
+		@nleft2:
+			cmp eax,39   ;识别向右方向键
+			jne @nright2
+			mov RightKeyHold,0
+		@nright2:
+			cmp eax,32   ;识别空格键
+			jne @nspace2
+			mov SpaceKeyHold,0
+		@nspace2:
+			cmp eax,13    ;识别enter键
+			jne @nenter2
+			mov EnterKeyHold,0
+		@nenter2:
+			cmp eax,65    ;识别a键
+			jne @na2
+			mov AKeyHold,0
+		@na2:
+			cmp eax,68   ;识别d键
+			jne @nd2
+			mov DKeyHold,0
+		@nd2:
+			cmp eax,83   ;识别s键
+			jne @ns2
+			mov SKeyHold,0
+		@ns2:
+			cmp eax,87   ;识别w键
+			jne @nw2
+			mov WKeyHold,0
+		@nw2:
+			jmp WinProcExit
 
 	Lmousedown:
 		INVOKE MessageBox, hWnd, ADDR PopupText, ADDR PopupTitle, MB_OK
@@ -288,6 +392,14 @@ WinProc PROC,
 
 	PaintMessage:
 		INVOKE PaintProc, hWnd, localMsg, wParam, lParam
+		jmp WinProcExit
+
+	TimerMessage:
+	
+		;call TimerTick
+
+		;invoke RedrawWindow,hWnd,NULL,NULL,1
+
 		jmp WinProcExit
 
 	OtherMessage:
@@ -397,7 +509,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 32, 32, @hdcMem, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdc, ax, bx, 31, 31, @hdcMem, 0, 0, SRCCOPY
 			pop ecx
 		.ELSEIF ax == 2
 			mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
@@ -414,7 +526,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 32, 32, @hdcMem2, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdc, ax, bx, 31, 31, @hdcMem2, 0, 0, SRCCOPY
 			pop ecx
 		.ENDIF
 		add esi, type map
