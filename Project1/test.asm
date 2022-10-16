@@ -1,4 +1,4 @@
-TITLE Windows Application                   (WinApp.asm)
+TITLE Windows Application	(WinApp.asm)
 
 .386
 .model flat, stdcall
@@ -43,7 +43,7 @@ MSGStruct ENDS
 MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
 +WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
 
-;函数引入，用于后面翻译键盘输入为字符码
+; 函数引入，用于后面翻译键盘输入为字符码
 TranslateMessage PROTO STDCALL :DWORD
 SetTimer PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 KillTimer PROTO STDCALL :DWORD,:DWORD
@@ -86,10 +86,6 @@ PopupTitle BYTE "Popup Window",0
 PopupText  BYTE "This window was activated by a "
 	       BYTE "WM_LBUTTONDOWN message",0
 
-GreetTitle BYTE "Main Window Active",0
-GreetText  BYTE "This window is shown immediately after "
-	       BYTE "CreateWindow and UpdateWindow are called.",0
-
 buttonTitle BYTE "push keyboard Window",0
 buttonText  BYTE "This window was activated by a"
 	       BYTE "WM_KEYDOWN message.",0
@@ -99,7 +95,7 @@ CloseMsg   BYTE "WM_CLOSE message received",0
 ErrorTitle  BYTE "Error",0
 
 ; 
-WindowName  BYTE "ASM Windows App",0
+WindowName  BYTE "INVERSUS ASM",0
 className   BYTE "ASMWin",0
 
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
