@@ -61,6 +61,8 @@ SelectObject PROTO STDCALL :DWORD,:DWORD
 BitBlt PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 SetBkColor PROTO STDCALL :DWORD,:DWORD
 Rectangle PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+TextOutA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+CreateFontA PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 PaintProc PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 
@@ -98,6 +100,13 @@ ErrorTitle  BYTE "Error",0
 WindowName  BYTE "INVERSUS ASM",0
 className   BYTE "ASMWin",0
 
+startText BYTE "start",0
+helpText BYTE "help",0
+exitText BYTE "exit",0
+PVPText BYTE "P V P",0
+PVEText BYTE "P V E",0
+BackText BYTE "<-back",0
+
 IDB_PNG1_PATH BYTE "..\Project1\image\black.jpg",0  ;暂时写成这样便于测试
 IDB_PNG2_PATH BYTE "..\Project1\image\white.jpg",0
 IDR_BG1_PATH BYTE "..\Project1\image\background.jpg",0
@@ -123,6 +132,7 @@ hdcMem DWORD ?
 hdcMem2 DWORD ?
 
 WhichMenu DWORD 2			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+SelectMenu DWORD 0			; 正在选择的菜单项
 
 blackblock WORD 164,164,24
 whiteblock WORD 452,292,24
@@ -179,10 +189,9 @@ WinMain PROC
 
 	; Create the application's main window.
 	; Returns a handle to the main window in EAX.
-	;禁止窗口大小变化操作 把WS_EX_CLIENTEDGE改成0，把WS_OVERLAPPEDWINDOW改成WS_BORDER+WS_CAPTION+WS_SYSMENU
 	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
-	 ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
-	 WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
+	ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
+	WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
 
 	mov hMainWnd,eax
 
@@ -448,34 +457,84 @@ ErrorHandler ENDP
 
 PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
+	local font: DWORD
 
 	invoke  BeginPaint, hWnd, addr ps
 	mov hdc, eax
 
 	.IF WhichMenu == 0
+
 		invoke GetStockObject,BLACK_BRUSH
-		
 		invoke SelectObject,hdcMem,eax
 		mov holdbr,eax
-		
-		invoke GetStockObject,SYSTEM_FIXED_FONT
-		
-		invoke SelectObject,hdcMem,eax
-		mov holdft,eax
 
 		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
-
-		;invoke DrawLine,4,256,160,0Ch,0Dh,0Eh,0Fh
-
-		;invoke DrawLine,4,256,192,2Ch,2Dh,0Eh,0Fh
-
-		;jmp DrawMenuSelect
-		
 		invoke SelectObject,hdcMem,holdbr
 
-		invoke SelectObject,hdcMem,holdft
+		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
+
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font, eax
+		INVOKE SelectObject,hdc, eax
+
+		INVOKE SetTextColor,hdc,00FFFFFFh
+		INVOKE SetBkColor,hdc,0
+
+		;根据选择菜单，分别绘制不同样式的菜单项
+		.IF SelectMenu == 0
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+		.ELSEIF SelectMenu == 1
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+		.ELSEIF SelectMenu == 2
+			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+		.ENDIF
+
+		INVOKE DeleteObject,font
+
+	.ELSEIF WhichMenu == 1
+
+		invoke GetStockObject,BLACK_BRUSH
+		invoke SelectObject,hdcMem,eax
+		mov holdbr,eax
+
+		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
+		invoke SelectObject,hdcMem,holdbr
 
 		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
+
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font, eax
+		INVOKE SelectObject,hdc, eax
+
+		INVOKE SetTextColor,hdc,00FFFFFFh
+		INVOKE SetBkColor,hdc,0
+
+		;根据选择菜单，分别绘制不同样式的菜单项
+		.IF SelectMenu == 0
+			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
+		.ELSEIF SelectMenu == 1
+			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
+			INVOKE SetTextColor,hdc,0
+			INVOKE SetBkColor,hdc,00FFFFFFh
+			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
+		.ENDIF
+
+		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 2
 		INVOKE CreateCompatibleDC, hdc
