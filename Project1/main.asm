@@ -492,26 +492,78 @@ TimerPROC PROC
 			mov WhichMenu,0
 			jmp TimerTickReturn
 		.ENDIF
-	.ELSEIF WhichMenu == 2
+	.ELSEIF WhichMenu == 2   ;游戏界面
 
 			cmp UpKeyHold,1
 			jne TT@1
-			sub [whiteblock+2],2
+			mov ax,[whiteblock+2]
+			sub ax,2
+			mov bx,[whiteblock]
+			call calCoordinate
+			.IF [map+ax] == 1
+				mov ax,[whiteblock+2]
+				sub ax,2
+				mov bx,[whiteblock]
+				add bx,24
+				call calCoordinate
+				.IF [map+ax] == 1
+					sub [whiteblock+2],2
+				.ENDIF
+			.ENDIF
 
 		TT@1:
 			cmp DownKeyHold,1
 			jne TT@2
-			add [whiteblock+2],2
+			mov ax,[whiteblock+2]
+			add ax,26
+			mov bx,[whiteblock]
+			call calCoordinate
+			.IF [map+ax] == 1
+				mov ax,[whiteblock+2]
+				add ax,26
+				mov bx,[whiteblock]
+				add bx,24
+				call calCoordinate
+				.IF [map+ax] == 1
+					add [whiteblock+2],2
+				.ENDIF
+			.ENDIF
 		
 		TT@2:
 			cmp LeftKeyHold,1
 			jne TT@3
-			sub [whiteblock],2
+			mov ax,[whiteblock+2]
+			mov bx,[whiteblock]
+			sub bx,2
+			call calCoordinate
+			.IF [map+ax] == 1
+				mov ax,[whiteblock+2]
+				mov bx,[whiteblock]
+				sub bx,2
+				add ax,24
+				call calCoordinate
+				.IF [map+ax] == 1
+					sub [whiteblock],2
+				.ENDIF
+			.ENDIF
 		
 		TT@3:
 			cmp RightKeyHold,1
 			jne TT@4
-			add [whiteblock],2
+			mov ax,[whiteblock+2]
+			add ax,24
+			mov bx,[whiteblock]
+			add bx,26
+			call calCoordinate
+			.IF [map+ax] == 1
+				mov ax,[whiteblock+2]
+				mov bx,[whiteblock]
+				add bx,26
+				call calCoordinate
+				.IF [map+ax] == 1
+					add [whiteblock],2
+				.ENDIF
+			.ENDIF
 		
 		TT@4:
 			cmp EnterKeyHold,1
@@ -520,22 +572,74 @@ TimerPROC PROC
 		TT@5:
 			cmp WKeyHold,1
 			jne TT@6
-			sub [blackblock+2],2
+			mov ax,[blackblock+2]
+			sub ax,2
+			mov bx,[blackblock]
+			call calCoordinate
+			.IF [map+ax] == 2
+				mov ax,[blackblock+2]
+				sub ax,2
+				mov bx,[blackblock]
+				add bx,24
+				call calCoordinate
+				.IF [map+ax] == 2
+					sub [blackblock+2],2
+				.ENDIF
+			.ENDIF
 		
 		TT@6:
 			cmp SKeyHold,1
 			jne TT@7
-			add [blackblock+2],2
+			mov ax,[blackblock+2]
+			add ax,26
+			mov bx,[blackblock]
+			call calCoordinate
+			.IF [map+ax] == 2
+				mov ax,[blackblock+2]
+				add ax,26
+				mov bx,[blackblock]
+				add bx,24
+				call calCoordinate
+				.IF [map+ax] == 2
+					add [blackblock+2],2
+				.ENDIF
+			.ENDIF
 
 		TT@7:
 			cmp AKeyHold,1
 			jne TT@8
-			sub [blackblock],2
+			mov ax,[blackblock+2]
+			mov bx,[blackblock]
+			sub bx,2
+			call calCoordinate
+			.IF [map+ax] == 2
+				mov ax,[blackblock+2]
+				mov bx,[blackblock]
+				sub bx,2
+				add ax,24
+				call calCoordinate
+				.IF [map+ax] == 2
+					sub [blackblock],2
+				.ENDIF
+			.ENDIF
 
 		TT@8:
 			cmp DKeyHold,1
 			jne TT@9
-			add [blackblock],2
+			mov ax,[blackblock+2]
+			add ax,24
+			mov bx,[blackblock]
+			add bx,26
+			call calCoordinate
+			.IF [map+ax] == 2
+				mov ax,[blackblock+2]
+				mov bx,[blackblock]
+				add bx,26
+				call calCoordinate
+				.IF [map+ax] == 2
+					add [blackblock],2
+				.ENDIF
+			.ENDIF
 		
 		TT@9:
 			cmp SpaceKeyHold,1
@@ -547,5 +651,21 @@ TimerTickReturn:
 	ret
 
 TimerPROC ENDP
+
+;------------------------------------------------------
+calCoordinate PROC
+;用于计算黑白角色在地图中的位置，便于判断是否是合法移动
+;------------------------------------------------------
+	push bx
+	sar ax,5
+	mov bx,20
+	mul bx
+	pop bx
+	sar bx,5
+	add ax,bx
+	mov bx,2
+	mul bx
+	ret
+calCoordinate ENDP
 
 END WinMain
