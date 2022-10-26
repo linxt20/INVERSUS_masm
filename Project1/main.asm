@@ -431,7 +431,7 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMem, eax
 
-		INVOKE LoadImageA, NULL, offset IDR_HELP_PATH, 0, 640, 384, LR_LOADFROMFILE
+		INVOKE LoadImageA, NULL, offset IDR_HELP_PATH, 0, 640, 480, LR_LOADFROMFILE
 		mov helpPicBitmap, eax
 
 		INVOKE SelectObject, hdcMem, helpPicBitmap
