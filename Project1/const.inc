@@ -74,6 +74,7 @@ BackText				BYTE	"<-back",0
 IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0
 IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0
 IDR_BG1_PATH			BYTE	"..\Project1\image\background.jpg",0
+IDR_HELP_PATH			BYTE	"..\Project1\image\help.jpg",0
 
 ; Define the Application's Window class structure.
 MainWin WNDCLASS <NULL,WinProc,NULL,NULL,NULL,NULL,NULL, \
@@ -86,6 +87,7 @@ hInstance				DWORD ?
 whitePicBitmap			DWORD ?
 blackPicBitmap			DWORD ? 
 bgPicBitmap				DWORD ?
+helpPicBitmap			DWORD ?
 hbitmap					DWORD ?
 hdc						DWORD ?
 holdbr					DWORD ?
@@ -94,7 +96,7 @@ ps						PAINTSTRUCT	<>
 hdcMem					DWORD ?
 hdcMem2					DWORD ?
 
-WhichMenu				DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束
+WhichMenu				DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面
 SelectMenu				DWORD 0			; 正在选择的菜单项
 
 blackblock				WORD 164,164,24

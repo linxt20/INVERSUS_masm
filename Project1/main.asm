@@ -277,7 +277,7 @@ PaintProc PROC USES ecx eax ebx esi,
 	invoke  BeginPaint, hWnd, addr ps
 	mov hdc, eax
 
-	.IF WhichMenu == 0
+	.IF WhichMenu == 0 ;开始界面
 
 		invoke GetStockObject,BLACK_BRUSH
 		invoke SelectObject,hdcMem,eax
@@ -318,7 +318,7 @@ PaintProc PROC USES ecx eax ebx esi,
 
 		INVOKE DeleteObject,font
 
-	.ELSEIF WhichMenu == 1
+	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
 
 		invoke GetStockObject,BLACK_BRUSH
 		invoke SelectObject,hdcMem,eax
@@ -351,7 +351,7 @@ PaintProc PROC USES ecx eax ebx esi,
 
 		INVOKE DeleteObject,font
 
-	.ELSEIF WhichMenu == 2
+	.ELSEIF WhichMenu == 2                    ;游戏界面
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMem, eax
 		INVOKE CreateCompatibleDC, hdc
@@ -426,6 +426,16 @@ PaintProc PROC USES ecx eax ebx esi,
 
 		invoke DeleteDC, hdcMem
 		invoke DeleteDC, hdcMem2
+	.ELSEIF WhichMenu == 3   ;结束界面
+	.ELSEIF WhichMenu == 4   ;帮助界面
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMem, eax
+
+		INVOKE LoadImageA, NULL, offset IDR_HELP_PATH, 0, 640, 384, LR_LOADFROMFILE
+		mov helpPicBitmap, eax
+
+		INVOKE SelectObject, hdcMem, helpPicBitmap
+		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY
 	.ENDIF
 
 	invoke EndPaint, hWnd, addr ps
@@ -434,7 +444,7 @@ PaintProc ENDP
 
 TimerPROC PROC
 
-	.IF WhichMenu == 0
+	.IF WhichMenu == 0   ;开始界面
 		.IF UpKeyHold == 1
 			.IF SelectMenu > 0
 				dec SelectMenu
@@ -450,12 +460,13 @@ TimerPROC PROC
 				inc WhichMenu
 				jmp TimerTickReturn
 			.ELSEIF SelectMenu == 1
-				; 后续在这里添加“帮助”功能
+				mov WhichMenu,4
+				jmp TimerTickReturn
 			.ELSE
 				INVOKE ExitProcess,0
 			.ENDIF
 		.ENDIF
-	.ELSEIF WhichMenu == 1
+	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
 		.IF UpKeyHold == 1
 			.IF SelectMenu > 0
 				dec SelectMenu
@@ -475,6 +486,11 @@ TimerPROC PROC
 				dec SelectMenu
 				jmp TimerTickReturn
 			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 4   ;帮助界面
+		.IF EnterKeyHold == 1
+			mov WhichMenu,0
+			jmp TimerTickReturn
 		.ENDIF
 	.ELSEIF WhichMenu == 2
 
