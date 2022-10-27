@@ -845,7 +845,7 @@ LoopExit:
 			mov ax,[whiteblock+2]   ;检测白方的右下角是否在变色路径上
 			add ax,23
 			mov bx,[whiteblock]
-			add ax,23
+			add bx,23
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,2
@@ -885,7 +885,7 @@ LoopExit:
 			mov ax,[blackblock+2]   ;检测白方的右下角是否在变色路径上
 			add ax,23
 			mov bx,[blackblock]
-			add ax,23
+			add bx,23
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,1
@@ -910,7 +910,7 @@ isBulletsHit PROC
 isBulletsHit ENDP
 
 ;------------------------------------
-someOneDead PROC USES ecx
+someOneDead PROC USES ecx edx
 ;输入参数：ax，指被击中方的color(1/2)
 ;------------------------------------
 	mov WinFlag,1  ;将胜利标志位置1
@@ -935,6 +935,15 @@ someOneDead PROC USES ecx
 		mov [map+ax],2
 		loop L2
 	.ENDIF
+	mov ecx,10
+	mov edx,offset bullets
+L3:          ;清除所有子弹
+	mov SWORD PTR [edx],-1
+	mov SWORD PTR [edx+2],-1
+	mov WORD PTR [edx+4],0
+	mov WORD PTR [edx+6],0
+	add edx,8
+	loop L3
 	INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
 	ret
 someOneDead ENDP
