@@ -506,7 +506,7 @@ PaintProc ENDP
 TimerPROC PROC
 
 	.IF WhichMenu == 2   ;游戏界面
-
+		.IF WinFlag == 0
 			call updateBullets
 
 			cmp UpKeyHold,1
@@ -669,7 +669,7 @@ TimerPROC PROC
 			cmp SpaceKeyHold,1
 			jne TimerTickReturn
 			invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
-
+		.ENDIF
 	.ENDIF
 
 TimerTickReturn:
@@ -678,7 +678,7 @@ TimerTickReturn:
 TimerPROC ENDP
 
 ;--------------------------------------------------------------
-calCoordinate PROC
+calCoordinate PROC USES edx
 ;用于计算黑白角色在地图中的位置，便于判断是否是合法移动
 ;也可以用来计算子弹所处的位置，用于碰撞判断
 ;参数：ax：需要计算的物体的纵坐标，bx：横坐标
@@ -731,8 +731,7 @@ updateBullets PROC
 	mov ecx,10
 L1:
 	mov esi,offset bullets
-	mov eax,0
-	mov ax,cx
+	mov eax,ecx
 	dec ax
 	sal ax,3
 	add esi,eax  ;现在esi里存的就是当前所需要更新的子弹结构体的地址了，使用[esi]、[esi + 2]...等可以访问具体的属性值
@@ -743,7 +742,7 @@ L1:
 		ret
 	.ENDIF
 
-	mov ax,WORD PTR [esi+6]
+	mov ax,WORD PTR [esi+6]   ;子弹合法，更新子弹位置
 	.IF ax == 1
 		sub WORD PTR [esi+2],32
 	.ELSEIF ax == 2
@@ -771,7 +770,43 @@ L1:
 		ret
 	.ENDIF
 
-	; 如果子弹位置更新后未超出地图，将路径变色，并检测是否击中敌方
+	;如果子弹位置更新后未超出地图，检测其是否与其他子弹对冲而抵消
+	mov ax,WORD PTR [esi+2]
+	mov bx,WORD PTR [esi]
+	call calCoordinate
+	mov bulletPosition,ax
+	push ecx
+	mov ecx,10
+	mov edx,offset bullets
+L2:
+	mov ax,WORD PTR [edx+4]
+	.IF ax == WORD PTR [esi+4]  ;如果要判断的两个子弹颜色相等就直接跳过
+		add edx,8
+		loop L2
+		jmp LoopExit
+	.ENDIF
+	mov ax,WORD PTR [edx+2]
+	mov bx,WORD PTR [edx]
+	call calCoordinate
+	.IF ax == bulletPosition  ;子弹颜色不等且位置相同，对冲抵消
+		mov WORD PTR [edx+4],0
+		mov SWORD PTR [edx+2],-1
+		mov SWORD PTR [edx],-1
+		mov WORD PTR [esi+4],0
+		mov SWORD PTR [esi+2],-1
+		mov SWORD PTR [esi],-1
+		pop ecx
+		dec ecx
+		cmp ecx, 0
+		jne L1
+		ret
+	.ENDIF
+	add edx,8
+	loop L2
+LoopExit:
+	pop ecx
+	
+	; 如果子弹没有因对冲而抵消，将路径变色，并检测是否击中敌方
 	mov ax,WORD PTR [esi+2]
 	mov bx,WORD PTR [esi]
 	call calCoordinate
@@ -866,10 +901,19 @@ L1:
 	ret
 updateBullets ENDP
 
+;-----------------------------------
+isBulletsHit PROC 
+;检查是否有子弹对冲而需要抵消
+;输入参数：ax：当前的子弹（）
+;----------------------------------
+
+isBulletsHit ENDP
+
 ;------------------------------------
 someOneDead PROC USES ecx
 ;输入参数：ax，指被击中方的color(1/2)
 ;------------------------------------
+	mov WinFlag,1  ;将胜利标志位置1
 	.IF ax == 1
 		mov [blackblock],999
 		mov [blackblock+2],999
@@ -891,7 +935,6 @@ someOneDead PROC USES ecx
 		mov [map+ax],2
 		loop L2
 	.ENDIF
-	;mov WhichMenu,1
 	INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
 	ret
 someOneDead ENDP

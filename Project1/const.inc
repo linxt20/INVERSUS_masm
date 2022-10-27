@@ -146,3 +146,5 @@ EnterKeyHold			DWORD 0
 bullets					BULLET 10 DUP(< -1,-1,0,0 >)  
 ;假定地图中同时最多有10颗子弹，采取队列的思想，每次从currentBullet插入，并令currentBullets加一（并模10）
 currentBullet			WORD 0
+
+WinFlag					WORD 0 ;是否胜利flag，0代表未胜利，游戏正常进行，1代表胜利，玩家无法继续操作
