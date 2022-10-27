@@ -107,6 +107,9 @@ WinProc PROC,
 
 KeyDownMessage:
 		mov eax,[localMsg+4] ;将按键的值转给eax
+		.IF WhichMenu != 2
+			call chooseMenu
+		.ENDIF
 
 		cmp eax,38  ;识别向上方向键
 		jne @nup1
@@ -202,7 +205,7 @@ CreateWindowMessage:
 	mov eax,[localMsg-4]
 	mov hWnd,eax
 
-	invoke SetTimer,hWnd,1,70,NULL
+	invoke SetTimer,hWnd,1,30,NULL
 
 	invoke GetDC,hWnd
 	mov hdc,eax
@@ -244,6 +247,63 @@ OtherMessage:
 WinProcExit:
 	ret
 WinProc ENDP
+
+chooseMenu PROC
+	.IF WhichMenu == 0   ;开始界面
+		.IF eax == 38
+			.IF SelectMenu > 0
+				dec SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 40
+			.IF SelectMenu < 2
+				inc SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 13
+			.IF SelectMenu == 0
+				inc WhichMenu
+				ret
+			.ELSEIF SelectMenu == 1
+				mov WhichMenu,4
+				ret
+			.ELSE
+				INVOKE ExitProcess,0
+			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
+		.IF eax == 38
+			.IF SelectMenu > 0
+				dec SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 40
+			.IF SelectMenu < 1
+				inc SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 13
+			.IF SelectMenu == 0
+				inc WhichMenu
+				ret
+			.ELSEIF SelectMenu == 1
+				dec WhichMenu
+				dec SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 4   ;帮助界面
+		.IF eax == 13
+			mov WhichMenu,0
+			ret
+		.ENDIF
+	.ENDIF
+	ret
+chooseMenu ENDP
 
 ;---------------------------------------------------
 ErrorHandler PROC
@@ -444,55 +504,7 @@ PaintProc ENDP
 
 TimerPROC PROC
 
-	.IF WhichMenu == 0   ;开始界面
-		.IF UpKeyHold == 1
-			.IF SelectMenu > 0
-				dec SelectMenu
-			.ENDIF
-		.ENDIF
-		.IF DownKeyHold == 1
-			.IF SelectMenu < 2
-				inc SelectMenu
-			.ENDIF
-		.ENDIF
-		.IF EnterKeyHold == 1
-			.IF SelectMenu == 0
-				inc WhichMenu
-				jmp TimerTickReturn
-			.ELSEIF SelectMenu == 1
-				mov WhichMenu,4
-				jmp TimerTickReturn
-			.ELSE
-				INVOKE ExitProcess,0
-			.ENDIF
-		.ENDIF
-	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
-		.IF UpKeyHold == 1
-			.IF SelectMenu > 0
-				dec SelectMenu
-			.ENDIF
-		.ENDIF
-		.IF DownKeyHold == 1
-			.IF SelectMenu < 1
-				inc SelectMenu
-			.ENDIF
-		.ENDIF
-		.IF EnterKeyHold == 1
-			.IF SelectMenu == 0
-				inc WhichMenu
-				jmp TimerTickReturn
-			.ELSEIF SelectMenu == 1
-				dec WhichMenu
-				dec SelectMenu
-				jmp TimerTickReturn
-			.ENDIF
-		.ENDIF
-	.ELSEIF WhichMenu == 4   ;帮助界面
-		.IF EnterKeyHold == 1
-			mov WhichMenu,0
-			jmp TimerTickReturn
-		.ENDIF
-	.ELSEIF WhichMenu == 2   ;游戏界面
+	.IF WhichMenu == 2   ;游戏界面
 
 			call updateBullets
 
@@ -500,17 +512,17 @@ TimerPROC PROC
 			jne TT@1
 			mov [whiteblock+6],1
 			mov ax,[whiteblock+2]
-			sub ax,2
+			sub ax,4
 			mov bx,[whiteblock]
 			call calCoordinate
 			.IF [map+ax] == 1
 				mov ax,[whiteblock+2]
-				sub ax,2
+				sub ax,4
 				mov bx,[whiteblock]
-				add bx,24
+				add bx,23
 				call calCoordinate
 				.IF [map+ax] == 1
-					sub [whiteblock+2],2
+					sub [whiteblock+2],4
 				.ENDIF
 			.ENDIF
 
@@ -519,17 +531,17 @@ TimerPROC PROC
 			jne TT@2
 			mov [whiteblock+6],2
 			mov ax,[whiteblock+2]
-			add ax,26
+			add ax,27
 			mov bx,[whiteblock]
 			call calCoordinate
 			.IF [map+ax] == 1
 				mov ax,[whiteblock+2]
-				add ax,26
+				add ax,27
 				mov bx,[whiteblock]
-				add bx,24
+				add bx,23
 				call calCoordinate
 				.IF [map+ax] == 1
-					add [whiteblock+2],2
+					add [whiteblock+2],4
 				.ENDIF
 			.ENDIF
 		
@@ -539,16 +551,16 @@ TimerPROC PROC
 			mov [whiteblock+6],3
 			mov ax,[whiteblock+2]
 			mov bx,[whiteblock]
-			sub bx,2
+			sub bx,4
 			call calCoordinate
 			.IF [map+ax] == 1
 				mov ax,[whiteblock+2]
 				mov bx,[whiteblock]
-				sub bx,2
-				add ax,24
+				sub bx,4
+				add ax,23
 				call calCoordinate
 				.IF [map+ax] == 1
-					sub [whiteblock],2
+					sub [whiteblock],4
 				.ENDIF
 			.ENDIF
 		
@@ -557,17 +569,17 @@ TimerPROC PROC
 			jne TT@4
 			mov [whiteblock+6],4
 			mov ax,[whiteblock+2]
-			add ax,24
+			add ax,23
 			mov bx,[whiteblock]
-			add bx,26
+			add bx,27
 			call calCoordinate
 			.IF [map+ax] == 1
 				mov ax,[whiteblock+2]
 				mov bx,[whiteblock]
-				add bx,26
+				add bx,27
 				call calCoordinate
 				.IF [map+ax] == 1
-					add [whiteblock],2
+					add [whiteblock],4
 				.ENDIF
 			.ENDIF
 		
@@ -581,17 +593,17 @@ TimerPROC PROC
 			jne TT@6
 			mov [blackblock+6],1
 			mov ax,[blackblock+2]
-			sub ax,2
+			sub ax,4
 			mov bx,[blackblock]
 			call calCoordinate
 			.IF [map+ax] == 2
 				mov ax,[blackblock+2]
-				sub ax,2
+				sub ax,4
 				mov bx,[blackblock]
-				add bx,24
+				add bx,23
 				call calCoordinate
 				.IF [map+ax] == 2
-					sub [blackblock+2],2
+					sub [blackblock+2],4
 				.ENDIF
 			.ENDIF
 		
@@ -600,17 +612,17 @@ TimerPROC PROC
 			jne TT@7
 			mov [blackblock+6],2
 			mov ax,[blackblock+2]
-			add ax,26
+			add ax,27
 			mov bx,[blackblock]
 			call calCoordinate
 			.IF [map+ax] == 2
 				mov ax,[blackblock+2]
-				add ax,26
+				add ax,27
 				mov bx,[blackblock]
-				add bx,24
+				add bx,23
 				call calCoordinate
 				.IF [map+ax] == 2
-					add [blackblock+2],2
+					add [blackblock+2],4
 				.ENDIF
 			.ENDIF
 
@@ -620,16 +632,16 @@ TimerPROC PROC
 			mov [blackblock+6],3
 			mov ax,[blackblock+2]
 			mov bx,[blackblock]
-			sub bx,2
+			sub bx,4
 			call calCoordinate
 			.IF [map+ax] == 2
 				mov ax,[blackblock+2]
 				mov bx,[blackblock]
-				sub bx,2
-				add ax,24
+				sub bx,4
+				add ax,23
 				call calCoordinate
 				.IF [map+ax] == 2
-					sub [blackblock],2
+					sub [blackblock],4
 				.ENDIF
 			.ENDIF
 
@@ -638,17 +650,17 @@ TimerPROC PROC
 			jne TT@9
 			mov [blackblock+6],4
 			mov ax,[blackblock+2]
-			add ax,24
+			add ax,23
 			mov bx,[blackblock]
-			add bx,26
+			add bx,27
 			call calCoordinate
 			.IF [map+ax] == 2
 				mov ax,[blackblock+2]
 				mov bx,[blackblock]
-				add bx,26
+				add bx,27
 				call calCoordinate
 				.IF [map+ax] == 2
-					add [blackblock],2
+					add [blackblock],4
 				.ENDIF
 			.ENDIF
 		
@@ -736,7 +748,7 @@ L1:
 
 	; 如果子弹位置更新后超出地图，则将子弹颜色置为0，视为不合法
 	mov ax,SWORD PTR [esi]
-	mov dx,SWORD PTR [esi]
+	mov dx,SWORD PTR [esi+2]
 	.IF (ax < 0)||(ax > 640)
 		mov WORD PTR [esi+4],0
 	.ELSEIF (dx < 0)||(dx > 480)
