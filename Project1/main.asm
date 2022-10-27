@@ -745,15 +745,48 @@ L1:
 	;可以通过调用calCoordinate计算子弹当前处在的位置
 	;（建议只用来算路径变色，而通过直接比较xy坐标判断是否击中敌方角色）
 	;-----------------------------------------------------------------
+	mov ax,WORD PTR [esi+6]
+	.IF ax == 1
+		sub WORD PTR [esi+2],32
+	.ELSEIF ax == 2
+		add WORD PTR [esi+2],32
+	.ELSEIF ax == 3
+		sub WORD PTR [esi],32
+	.ELSEIF ax == 4
+		add WORD PTR [esi],32
+	.ENDIF
 
 	; 如果子弹位置更新后超出地图，则将子弹颜色置为0，视为不合法
 	mov ax,SWORD PTR [esi]
 	mov dx,SWORD PTR [esi+2]
 	.IF (ax < 0)||(ax > 640)
 		mov WORD PTR [esi+4],0
+		dec ecx
+		cmp ecx, 0
+		jne L1
+		ret
 	.ELSEIF (dx < 0)||(dx > 480)
 		mov WORD PTR [esi+4],0
+		dec ecx
+		cmp ecx, 0
+		jne L1
+		ret
 	.ENDIF
+
+	; 如果子弹位置更新后未超出地图，将路径变色，并检测是否击中敌方
+	mov ax,WORD PTR [esi+2]
+	mov bx,WORD PTR [esi]
+	call calCoordinate
+	mov dx,[map+ax]
+	.IF dx == [esi+4]
+		.IF [map+ax] == 1
+			mov [map+ax],2
+		.ELSEIF [map+ax] == 2
+			mov [map+ax],1
+		.ENDIF
+	.ENDIF
+	;检测是否击中敌方
+
 	dec ecx
 	cmp ecx, 0
 	jne L1
