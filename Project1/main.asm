@@ -202,7 +202,7 @@ CreateWindowMessage:
 	mov eax,[localMsg-4]
 	mov hWnd,eax
 
-	invoke SetTimer,hWnd,1,100,NULL
+	invoke SetTimer,hWnd,1,70,NULL
 
 	invoke GetDC,hWnd
 	mov hdc,eax
@@ -494,6 +494,8 @@ TimerPROC PROC
 		.ENDIF
 	.ELSEIF WhichMenu == 2   ;游戏界面
 
+			call updateBullets
+
 			cmp UpKeyHold,1
 			jne TT@1
 			mov [whiteblock+6],1
@@ -662,11 +664,14 @@ TimerTickReturn:
 
 TimerPROC ENDP
 
-;------------------------------------------------------
+;--------------------------------------------------------------
 calCoordinate PROC
 ;用于计算黑白角色在地图中的位置，便于判断是否是合法移动
+;也可以用来计算子弹所处的位置，用于碰撞判断
 ;参数：ax：需要计算的物体的纵坐标，bx：横坐标
-;------------------------------------------------------
+;返回值：ax，存储当前位置在map数组中的偏移量。（已乘WORD的长度）
+;（即，使用方法：[map+ax]的值为被计算坐标的物体所在的格子）
+;--------------------------------------------------------------
 	push bx
 	sar ax,5
 	mov bx,20
@@ -706,5 +711,42 @@ emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
 
 	ret
 emitBullet ENDP
+
+updateBullets PROC
+	mov ecx,10
+L1:
+	mov esi,offset bullets
+	mov eax,0
+	mov ax,cx
+	dec ax
+	sal ax,3
+	add esi,eax  ;现在esi里存的就是当前所需要更新的子弹结构体的地址了，使用[esi]、[esi + 2]...等可以访问具体的属性值
+	
+	mov ax,WORD PTR [esi+4]
+	.IF ax == 0  ;子弹的颜色为0代表子弹不合法（即不存在），直接找下一个子弹
+		loop L1
+		ret
+	.ENDIF
+
+	;-----------------------------------------------------------------
+	;TODO：更新子弹（包括位置、路径变色等）
+	;可以通过调用calCoordinate计算子弹当前处在的位置
+	;（建议只用来算路径变色，而通过直接比较xy坐标判断是否击中敌方角色）
+	;-----------------------------------------------------------------
+
+	; 如果子弹位置更新后超出地图，则将子弹颜色置为0，视为不合法
+	mov ax,SWORD PTR [esi]
+	mov dx,SWORD PTR [esi]
+	.IF (ax < 0)||(ax > 640)
+		mov WORD PTR [esi+4],0
+	.ELSEIF (dx < 0)||(dx > 480)
+		mov WORD PTR [esi+4],0
+	.ENDIF
+	dec ecx
+	cmp ecx, 0
+	jne L1
+
+	ret
+updateBullets ENDP
 
 END WinMain

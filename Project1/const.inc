@@ -22,9 +22,9 @@ MSGStruct ENDS
 
 ;子弹数组定义
 BULLET STRUCT
-	xCoor				WORD ?
-	yCoor				WORD ?
-	color				WORD ? ;1代表黑方射出的子弹（黑色），2代表白方
+	xCoor				SWORD ? ;单位：像素
+	yCoor				SWORD ? ;单位：像素
+	color				WORD ? ;1代表黑方射出的子弹（黑色），2代表白方，0代表不合法子弹
 	heading				WORD ? ;子弹的朝向，1代表上，2代表下，3代表左，4代表右
 BULLET ENDS
 
@@ -142,6 +142,6 @@ SpaceKeyHold			DWORD 0
 EnterKeyHold			DWORD 0
 
 ;子弹数组，储存地图中的每颗子弹，在计时器中令所有子弹向指定方向移动一段距离
-bullets					BULLET 10 DUP(<?>)  
+bullets					BULLET 10 DUP(< -1,-1,0,0 >)  
 ;假定地图中同时最多有10颗子弹，采取队列的思想，每次从currentBullet插入，并令currentBullets加一（并模10）
 currentBullet			WORD 0
