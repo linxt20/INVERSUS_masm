@@ -107,10 +107,7 @@ WinProc PROC,
 
 KeyDownMessage:
 		mov eax,[localMsg+4] ;将按键的值转给eax
-		.IF WhichMenu != 2
-			call chooseMenu
-		.ENDIF
-
+		
 		cmp eax,38  ;识别向上方向键
 		jne @nup1
 		mov UpKeyHold,1
@@ -153,7 +150,10 @@ KeyDownMessage:
 		cmp eax,87 ;识别w键
 		jne @nw1
 		mov WKeyHold,1
-	@nw1:		
+	@nw1:
+		.IF WhichMenu != 2
+			call chooseMenu
+		.ENDIF
 		jmp WinProcExit
 
 KeyUpMessage:
@@ -288,6 +288,7 @@ chooseMenu PROC
 		.ENDIF
 		.IF eax == 13
 			.IF SelectMenu == 0
+				mov EnterKeyHold,0
 				inc WhichMenu
 				ret
 			.ELSEIF SelectMenu == 1
@@ -725,6 +726,8 @@ emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
 emitBullet ENDP
 
 updateBullets PROC
+	LOCAL bulletPosition:WORD
+
 	mov ecx,10
 L1:
 	mov esi,offset bullets
@@ -740,11 +743,6 @@ L1:
 		ret
 	.ENDIF
 
-	;-----------------------------------------------------------------
-	;TODO：更新子弹（包括位置、路径变色等）
-	;可以通过调用calCoordinate计算子弹当前处在的位置
-	;（建议只用来算路径变色，而通过直接比较xy坐标判断是否击中敌方角色）
-	;-----------------------------------------------------------------
 	mov ax,WORD PTR [esi+6]
 	.IF ax == 1
 		sub WORD PTR [esi+2],32
@@ -777,15 +775,89 @@ L1:
 	mov ax,WORD PTR [esi+2]
 	mov bx,WORD PTR [esi]
 	call calCoordinate
+	mov bulletPosition,ax
 	mov dx,[map+ax]
 	.IF dx == [esi+4]
-		.IF [map+ax] == 1
+		.IF [map+ax] == 1  ;黑方发的子弹
 			mov [map+ax],2
-		.ELSEIF [map+ax] == 2
+
+			mov ax,[whiteblock+2]   ;检测白方的左上角是否在变色路径上
+			mov bx,[whiteblock]
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,2
+				call someOneDead
+			.ENDIF
+
+			mov ax,[whiteblock+2]   ;检测白方的左下角是否在变色路径上
+			add ax,23
+			mov bx,[whiteblock]
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,2
+				call someOneDead
+			.ENDIF
+
+			mov ax,[whiteblock+2]   ;检测白方的右上角是否在变色路径上
+			mov bx,[whiteblock]
+			add bx,23
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,2
+				call someOneDead
+			.ENDIF
+
+			mov ax,[whiteblock+2]   ;检测白方的右下角是否在变色路径上
+			add ax,23
+			mov bx,[whiteblock]
+			add ax,23
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,2
+				call someOneDead
+			.ENDIF
+
+
+		.ELSEIF [map+ax] == 2      ;白方发的子弹
 			mov [map+ax],1
+
+			mov ax,[blackblock+2]   ;检测黑方的左上角是否在变色路径上
+			mov bx,[blackblock]
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,1
+				call someOneDead
+			.ENDIF
+
+			mov ax,[blackblock+2]   ;检测黑方的左下角是否在变色路径上
+			add ax,23
+			mov bx,[blackblock]
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,1
+				call someOneDead
+			.ENDIF
+
+			mov ax,[blackblock+2]   ;检测白方的右上角是否在变色路径上
+			mov bx,[blackblock]
+			add bx,23
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,1
+				call someOneDead
+			.ENDIF
+
+			mov ax,[blackblock+2]   ;检测白方的右下角是否在变色路径上
+			add ax,23
+			mov bx,[blackblock]
+			add ax,23
+			call calCoordinate
+			.IF ax == bulletPosition
+				mov ax,1
+				call someOneDead
+			.ENDIF
 		.ENDIF
 	.ENDIF
-	;检测是否击中敌方
 
 	dec ecx
 	cmp ecx, 0
@@ -793,5 +865,35 @@ L1:
 
 	ret
 updateBullets ENDP
+
+;------------------------------------
+someOneDead PROC USES ecx
+;输入参数：ax，指被击中方的color(1/2)
+;------------------------------------
+	.IF ax == 1
+		mov [blackblock],999
+		mov [blackblock+2],999
+		mov ecx,300
+	L1:
+		mov ax,cx
+		dec ax
+		sal ax,1
+		mov [map+ax],1
+		loop L1
+	.ELSE
+		mov [whiteblock],999
+		mov [whiteblock+2],999
+		mov ecx,300
+	L2:
+		mov ax,cx
+		dec ax
+		sal ax,1
+		mov [map+ax],2
+		loop L2
+	.ENDIF
+	;mov WhichMenu,1
+	INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
+	ret
+someOneDead ENDP
 
 END WinMain

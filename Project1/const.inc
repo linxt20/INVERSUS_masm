@@ -70,6 +70,7 @@ WM_KEYUP				EQU		000000101h
 .data
 
 ErrorTitle				BYTE	"Error",0
+youWinMsg				BYTE	"You Win!",0
 
 WindowName				BYTE	"INVERSUS ASM",0
 className				BYTE	"ASMWin",0
