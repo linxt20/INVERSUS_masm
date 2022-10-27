@@ -1,4 +1,4 @@
-WNDCLASS STRUC
+WNDCLASS STRUCT
 	style				DWORD ?
 	lpfnWndProc			DWORD ?
 	cbClsExtra			DWORD ?
@@ -19,6 +19,15 @@ MSGStruct STRUCT
 	msgTime				DWORD ?
 	msgPt				POINT <>
 MSGStruct ENDS
+
+;子弹数组定义
+BULLET STRUCT
+	xCoor				WORD ?
+	yCoor				WORD ?
+	color				WORD ? ;1代表黑方射出的子弹（黑色），2代表白方
+	heading				WORD ? ;子弹的朝向，1代表上，2代表下，3代表左，4代表右
+BULLET ENDS
+
 
 MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
 +WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
@@ -45,6 +54,7 @@ TextOutA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 CreateFontA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 PaintProc				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
+emitBullet				PROTO STDCALL :WORD,:WORD,:WORD,:WORD
 
 BLACK_BRUSH				EQU		4
 
@@ -99,8 +109,8 @@ hdcMem2					DWORD ?
 WhichMenu				DWORD 0			; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面
 SelectMenu				DWORD 0			; 正在选择的菜单项
 
-blackblock				WORD 164,164,24
-whiteblock				WORD 452,292,24
+blackblock				WORD 164,164,24,1 ;第四个参数是朝向（heading），指示子弹发射的方向
+whiteblock				WORD 452,292,24,1
 
 ;地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 map		WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
@@ -130,3 +140,8 @@ AKeyHold				DWORD 0
 DKeyHold				DWORD 0
 SpaceKeyHold			DWORD 0
 EnterKeyHold			DWORD 0
+
+;子弹数组，储存地图中的每颗子弹，在计时器中令所有子弹向指定方向移动一段距离
+bullets					BULLET 10 DUP(<?>)  
+;假定地图中同时最多有10颗子弹，采取队列的思想，每次从currentBullet插入，并令currentBullets加一（并模10）
+currentBullet			WORD 0

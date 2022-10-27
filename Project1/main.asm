@@ -496,6 +496,7 @@ TimerPROC PROC
 
 			cmp UpKeyHold,1
 			jne TT@1
+			mov [whiteblock+6],1
 			mov ax,[whiteblock+2]
 			sub ax,2
 			mov bx,[whiteblock]
@@ -514,6 +515,7 @@ TimerPROC PROC
 		TT@1:
 			cmp DownKeyHold,1
 			jne TT@2
+			mov [whiteblock+6],2
 			mov ax,[whiteblock+2]
 			add ax,26
 			mov bx,[whiteblock]
@@ -532,6 +534,7 @@ TimerPROC PROC
 		TT@2:
 			cmp LeftKeyHold,1
 			jne TT@3
+			mov [whiteblock+6],3
 			mov ax,[whiteblock+2]
 			mov bx,[whiteblock]
 			sub bx,2
@@ -550,6 +553,7 @@ TimerPROC PROC
 		TT@3:
 			cmp RightKeyHold,1
 			jne TT@4
+			mov [whiteblock+6],4
 			mov ax,[whiteblock+2]
 			add ax,24
 			mov bx,[whiteblock]
@@ -568,10 +572,12 @@ TimerPROC PROC
 		TT@4:
 			cmp EnterKeyHold,1
 			jne TT@5
+			invoke emitBullet,[whiteblock],[whiteblock+2],2,[whiteblock+6]
 
 		TT@5:
 			cmp WKeyHold,1
 			jne TT@6
+			mov [blackblock+6],1
 			mov ax,[blackblock+2]
 			sub ax,2
 			mov bx,[blackblock]
@@ -590,6 +596,7 @@ TimerPROC PROC
 		TT@6:
 			cmp SKeyHold,1
 			jne TT@7
+			mov [blackblock+6],2
 			mov ax,[blackblock+2]
 			add ax,26
 			mov bx,[blackblock]
@@ -608,6 +615,7 @@ TimerPROC PROC
 		TT@7:
 			cmp AKeyHold,1
 			jne TT@8
+			mov [blackblock+6],3
 			mov ax,[blackblock+2]
 			mov bx,[blackblock]
 			sub bx,2
@@ -626,6 +634,7 @@ TimerPROC PROC
 		TT@8:
 			cmp DKeyHold,1
 			jne TT@9
+			mov [blackblock+6],4
 			mov ax,[blackblock+2]
 			add ax,24
 			mov bx,[blackblock]
@@ -644,6 +653,7 @@ TimerPROC PROC
 		TT@9:
 			cmp SpaceKeyHold,1
 			jne TimerTickReturn
+			invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
 
 	.ENDIF
 
@@ -668,5 +678,33 @@ calCoordinate PROC
 	mul bx
 	ret
 calCoordinate ENDP
+
+emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
+	add xCoor,12
+	add yCoor,12
+	mov esi,offset bullets
+	mov eax,0
+	mov ax,currentBullet
+	sal ax,3
+	add esi,eax
+	mov ax,xCoor
+	mov WORD PTR [esi],ax
+
+	mov ax,yCoor
+	mov WORD PTR [esi+2],ax
+
+	mov ax,color
+	mov WORD PTR [esi+4],ax
+
+	mov ax,heading
+	mov WORD PTR [esi+6],ax
+
+	inc currentBullet
+	.IF currentBullet == 10
+		mov currentBullet,0
+	.ENDIF
+
+	ret
+emitBullet ENDP
 
 END WinMain
