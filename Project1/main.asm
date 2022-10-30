@@ -4,6 +4,7 @@ TITLE Windows Application	(WinApp.asm)
 .model flat, stdcall
 option casemap: none
 
+; 系统库
 include windows.inc
 include gdi32.inc
 includelib gdi32.lib
@@ -18,253 +19,315 @@ includelib msvcrt.lib
 include shell32.inc
 includelib shell32.lib
 
+; 自定义库
 include const.inc
 
 ;=================== CODE =========================
 .code
 WinMain PROC
-; Get a handle to the current process.
-	INVOKE GetModuleHandle, NULL
-	mov hInstance, eax
-	mov MainWin.hInstance, eax
+	; Get a handle to the current process.
+		INVOKE GetModuleHandle, NULL
+		mov hInstance, eax
+		mov MainWin.hInstance, eax
 
-; Load the program's icon and cursor.
-	INVOKE LoadIcon, NULL, IDI_APPLICATION
-	mov MainWin.hIcon, eax
-	INVOKE LoadCursor, NULL, IDC_ARROW
-	mov MainWin.hCursor, eax
+	; Load the program's icon and cursor.
+		INVOKE LoadIcon, NULL, IDI_APPLICATION
+		mov MainWin.hIcon, eax
+		INVOKE LoadCursor, NULL, IDC_ARROW
+		mov MainWin.hCursor, eax
 
-; Register the window class.
-	INVOKE RegisterClass, ADDR MainWin
-	.IF eax == 0
-	call ErrorHandler
-	jmp Exit_Program
-	.ENDIF
+	; Register the window class.
+		INVOKE RegisterClass, ADDR MainWin
+		.IF eax == 0
+		call ErrorHandler
+		jmp Exit_Program
+		.ENDIF
 
-; Create the application's main window.
-; Returns a handle to the main window in EAX.
-	INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
-	ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
-	WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
+	; Create the application's main window.
+	; Returns a handle to the main window in EAX.
+		INVOKE CreateWindowEx, WS_EX_CLIENTEDGE, ADDR className,
+		ADDR WindowName,WS_OVERLAPPEDWINDOW-WS_THICKFRAME-WS_MAXIMIZEBOX,100,100,
+		WINDOW_WIDTH+20,WINDOW_HEIGHT+43,NULL,NULL,hInstance,NULL
 
-	mov hMainWnd,eax
+		mov hMainWnd,eax
 
-; If CreateWindowEx failed, display a message & exit.
-	.IF eax == 0
-	call ErrorHandler
-	jmp  Exit_Program
-	.ENDIF
+	; If CreateWindowEx failed, display a message & exit.
+		.IF eax == 0
+		call ErrorHandler
+		jmp  Exit_Program
+		.ENDIF
 
-; Show and draw the window.
-	INVOKE ShowWindow, hMainWnd, SW_SHOW
-	INVOKE UpdateWindow, hMainWnd
+	; Show and draw the window.
+		INVOKE ShowWindow, hMainWnd, SW_SHOW
+		INVOKE UpdateWindow, hMainWnd
 
-; Begin the program's message-handling loop.
-Message_Loop:
-	; Get next message from the queue.
-	INVOKE GetMessage, ADDR msg, NULL,NULL,NULL
+	; Begin the program's message-handling loop.
+	Message_Loop:
+		; Get next message from the queue.
+		INVOKE GetMessage, ADDR msg, NULL,NULL,NULL
 
-	; Quit if no more messages.
-	.IF eax == 0
-	jmp Exit_Program
-	.ENDIF
+		; Quit if no more messages.
+		.IF eax == 0
+		jmp Exit_Program
+		.ENDIF
 
-	;翻译键盘消息，把键盘消息转化成字符码
-	INVOKE TranslateMessage, ADDR msg
-	; Relay the message to the program's WinProc.
-	INVOKE DispatchMessage, ADDR msg
-	jmp Message_Loop
+		;翻译键盘消息，把键盘消息转化成字符码
+		INVOKE TranslateMessage, ADDR msg
+		; Relay the message to the program's WinProc.
+		INVOKE DispatchMessage, ADDR msg
+		jmp Message_Loop
 
-Exit_Program:
-	INVOKE ExitProcess,0
+	Exit_Program:
+		INVOKE ExitProcess,0
 WinMain ENDP
 
 ;-----------------------------------------------------
 WinProc PROC,
-	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
-; The application's message handler, which handles
-; application-specific messages. All other messages
-; are forwarded to the default Windows message
-; handler.
-;-----------------------------------------------------
-	mov eax, localMsg
-		
-	;判断是否为键盘按下操作
-	cmp eax,WM_KEYDOWN
-	je KeyDownMessage
-	;检查按下的键盘是否抬起，抬起则恢复
-	cmp eax,WM_KEYUP
-	je KeyUpMessage
-	cmp eax,WM_CREATE			; create window?
-	je CreateWindowMessage	  
-	cmp eax,WM_CLOSE		 ; close window?
-	je CloseWindowMessage
-	cmp eax,WM_PAINT
-	je PaintMessage
-	cmp eax,WM_TIMER
-	je TimerMessage
-	jmp OtherMessage			; other message?
+		hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
+	; The application's message handler, which handles
+	; application-specific messages. All other messages
+	; are forwarded to the default Windows message
+	; handler.
+	;-----------------------------------------------------
+		mov eax, localMsg
+			
+		;判断是否为键盘按下操作
+		cmp eax,WM_KEYDOWN
+		je KeyDownMessage
+		;检查按下的键盘是否抬起，抬起则恢复
+		cmp eax,WM_KEYUP
+		je KeyUpMessage
+		cmp eax,WM_CREATE		; create window?
+		je CreateWindowMessage	  
+		cmp eax,WM_CLOSE		 ; close window?
+		je CloseWindowMessage
+		cmp eax,WM_PAINT       ; 绘图消息
+		je PaintMessage
+		cmp eax,WM_TIMER      ; 定时器消息
+		je TimerMessage
+		jmp OtherMessage		 ; other message?
 
-KeyDownMessage:
-		mov eax,[localMsg+4] ;将按键的值转给eax
+	KeyDownMessage:
+			mov eax,[localMsg+4] ;将按键的值转给eax
+			
+			cmp eax,38  ;识别向上方向键
+			jne @nup1
+			mov UpKeyHold,1
+		@nup1:
+			cmp eax,40  ;识别向下方向键
+			jne @ndown1
+			mov DownKeyHold,1
+		@ndown1:
+			cmp eax,37  ;识别向左方向键
+			jne @nleft1
+			mov LeftKeyHold,1
+		@nleft1:
+			cmp eax,39   ;识别向右方向键
+			jne @nright1
+			mov RightKeyHold,1
+		@nright1:
+			cmp eax,32  ;识别空格键
+			jne @nspace1
+			mov SpaceKeyHold,1
+		@nspace1:
+			cmp eax,13  ;识别enter键
+			jne @nenter1
+			mov EnterKeyHold,1
+		@nenter1:
+			cmp eax,27 ;识别esc键
+			jne @nescape1
+			; call EscapeInMenu
+		@nescape1: 
+			cmp eax,65 ;识别a键
+			jne @na1
+			mov AKeyHold,1
+		@na1:
+			cmp eax,68 ;识别d键
+			jne @nd1
+			mov DKeyHold,1
+		@nd1:
+			cmp eax,83 ;识别s键
+			jne @ns1
+			mov SKeyHold,1
+		@ns1:
+			cmp eax,87 ;识别w键
+			jne @nw1
+			mov WKeyHold,1
+		@nw1:
+			.IF WhichMenu != 2
+				call chooseMenu
+			.ENDIF
+			jmp WinProcExit
+
+	KeyUpMessage:
+			mov eax,[localMsg+4]  ;将按键的值转给eax
 		
-		cmp eax,38  ;识别向上方向键
-		jne @nup1
-		mov UpKeyHold,1
-	@nup1:
-		cmp eax,40  ;识别向下方向键
-		jne @ndown1
-		mov DownKeyHold,1
-	@ndown1:
-		cmp eax,37  ;识别向左方向键
-		jne @nleft1
-		mov LeftKeyHold,1
-	@nleft1:
-		cmp eax,39   ;识别向右方向键
-		jne @nright1
-		mov RightKeyHold,1
-	@nright1:
-		cmp eax,32  ;识别空格键
-		jne @nspace1
-		mov SpaceKeyHold,1
-	@nspace1:
-		cmp eax,13  ;识别enter键
-		jne @nenter1
-		mov EnterKeyHold,1
-	@nenter1:
-		cmp eax,27 ;识别esc键
-		jne @nescape1
-	@nescape1: 
-		cmp eax,65 ;识别a键
-		jne @na1
-		mov AKeyHold,1
-	@na1:
-		cmp eax,68 ;识别d键
-		jne @nd1
-		mov DKeyHold,1
-	@nd1:
-		cmp eax,83 ;识别s键
-		jne @ns1
-		mov SKeyHold,1
-	@ns1:
-		cmp eax,87 ;识别w键
-		jne @nw1
-		mov WKeyHold,1
-	@nw1:
-		.IF WhichMenu != 2
-			call chooseMenu
-		.ENDIF
+			cmp eax,38    ;识别向上方向键
+			jne @nup2
+			mov UpKeyHold,0
+		@nup2:
+			cmp eax,40   ;识别向下方向键
+			jne @ndown2
+			mov DownKeyHold,0
+		@ndown2:
+			cmp eax,37   ;识别向左方向键
+			jne @nleft2
+			mov LeftKeyHold,0
+		@nleft2:
+			cmp eax,39   ;识别向右方向键
+			jne @nright2
+			mov RightKeyHold,0
+		@nright2:
+			cmp eax,32   ;识别空格键
+			jne @nspace2
+			mov SpaceKeyHold,0
+		@nspace2:
+			cmp eax,13    ;识别enter键
+			jne @nenter2
+			mov EnterKeyHold,0
+		@nenter2:
+			cmp eax,65    ;识别a键
+			jne @na2
+			mov AKeyHold,0
+		@na2:
+			cmp eax,68   ;识别d键
+			jne @nd2
+			mov DKeyHold,0
+		@nd2:
+			cmp eax,83   ;识别s键
+			jne @ns2
+			mov SKeyHold,0
+		@ns2:
+			cmp eax,87   ;识别w键
+			jne @nw2
+			mov WKeyHold,0
+		@nw2:
+			jmp WinProcExit
+
+	CreateWindowMessage:
+		mov eax,[localMsg-4]   
+		mov hWnd,eax
+
+		; 开始定时器 30ms发一次定时器消息
+		invoke SetTimer,hWnd,1,30,NULL
+
+		; 获取当前程序窗口DC句柄
+		invoke GetDC,hWnd
+		mov hdc,eax
+
+		; 布局页面的句柄以及其显示的句柄创建设置
+		invoke CreateCompatibleDC,hdc
+		mov hdcMempage,eax
+		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
+		mov hbitmap,eax
+		invoke SelectObject,hdcMempage,hbitmap
+
+		; 四个主要图片的显示句柄
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemblack, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemwhite, eax 
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMembg, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemhelp, eax
+
+		; 四个主要图片的存储句柄
+		INVOKE LoadImageA, hdc, offset IDB_PNG1_PATH, 0, 0, 0, LR_LOADFROMFILE
+		mov blackPicBitmap, eax
+		INVOKE LoadImageA, hdc, offset IDB_PNG2_PATH, 0, 0, 0, LR_LOADFROMFILE
+		mov whitePicBitmap, eax
+		INVOKE LoadImageA, hdc, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
+		mov bgPicBitmap, eax
+		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
+		mov helpPicBitmap, eax
+
+		; 存储句柄与显示句柄之间的链接绑定
+		INVOKE SelectObject, hdcMembg, bgPicBitmap
+		INVOKE SelectObject, hdcMemblack, blackPicBitmap
+		INVOKE SelectObject, hdcMemwhite, whitePicBitmap
+		INVOKE SelectObject, hdcMemhelp, helpPicBitmap
+
+		; 释放当前窗口DC
+		invoke ReleaseDC,hWnd,hdc
+
 		jmp WinProcExit
 
-KeyUpMessage:
-		mov eax,[localMsg+4]  ;将按键的值转给eax
-	
-		cmp eax,38    ;识别向上方向键
-		jne @nup2
-		mov UpKeyHold,0
-	@nup2:
-		cmp eax,40   ;识别向下方向键
-		jne @ndown2
-		mov DownKeyHold,0
-	@ndown2:
-		cmp eax,37   ;识别向左方向键
-		jne @nleft2
-		mov LeftKeyHold,0
-	@nleft2:
-		cmp eax,39   ;识别向右方向键
-		jne @nright2
-		mov RightKeyHold,0
-	@nright2:
-		cmp eax,32   ;识别空格键
-		jne @nspace2
-		mov SpaceKeyHold,0
-	@nspace2:
-		cmp eax,13    ;识别enter键
-		jne @nenter2
-		mov EnterKeyHold,0
-	@nenter2:
-		cmp eax,65    ;识别a键
-		jne @na2
-		mov AKeyHold,0
-	@na2:
-		cmp eax,68   ;识别d键
-		jne @nd2
-		mov DKeyHold,0
-	@nd2:
-		cmp eax,83   ;识别s键
-		jne @ns2
-		mov SKeyHold,0
-	@ns2:
-		cmp eax,87   ;识别w键
-		jne @nw2
-		mov WKeyHold,0
-	@nw2:
+	CloseWindowMessage:
+		; 关闭信息接受
+		INVOKE PostQuitMessage,0
+
+		; 关闭定时器
+		invoke KillTimer,hWnd,1
 		jmp WinProcExit
 
-CreateWindowMessage:
-	mov eax,[localMsg-4]
-	mov hWnd,eax
+	PaintMessage:
+		; 直接调用绘图函数
+		INVOKE PaintProc, hWnd, localMsg, wParam, lParam
+		jmp WinProcExit
 
-	invoke SetTimer,hWnd,1,30,NULL
+	TimerMessage:
+		; 直接调用定时器处理函数
+		call TimerPROC
+		; 每次接收到定时器信号后都进行重绘
+		invoke RedrawWindow,hWnd,NULL,NULL,1
+		jmp WinProcExit
 
-	invoke GetDC,hWnd
-	mov hdc,eax
+	OtherMessage:
+		INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
+		jmp WinProcExit
 
-	invoke LoadImageA,hInstance,1001,0,0,0,0
-	mov hbitmap,eax
-
-	invoke CreateCompatibleDC,hdc
-	mov hdcMem,eax
-
-	invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
-	mov hbitmap,eax
-
-	invoke SelectObject,hdcMem,hbitmap
-
-	invoke ReleaseDC,hWnd,hdc
-
-	jmp WinProcExit
-
-CloseWindowMessage:
-	INVOKE PostQuitMessage,0
-
-	invoke KillTimer,hWnd,1
-	jmp WinProcExit
-
-PaintMessage:
-	INVOKE PaintProc, hWnd, localMsg, wParam, lParam
-	jmp WinProcExit
-
-TimerMessage:
-	call TimerPROC
-	invoke RedrawWindow,hWnd,NULL,NULL,1
-	jmp WinProcExit
-
-OtherMessage:
-	INVOKE DefWindowProc, hWnd, localMsg, wParam, lParam
-	jmp WinProcExit
-
-WinProcExit:
-	ret
+	WinProcExit:
+		ret
 WinProc ENDP
 
-chooseMenu PROC
+NewRound PROC  ; 进入游戏实现自动初始化
+	initblock: ; 初始化黑白块初始位置
+		mov ax,[roundone_black_initpos]
+		mov [blackblock],ax
+
+		mov ax,[roundone_black_initpos+2]
+		mov [blackblock+2],ax
+
+		mov [blackblock+6],1
+
+		mov ax,[roundone_white_initpos]
+		mov [whiteblock],ax
+
+		mov ax,[roundone_white_initpos+2]
+		mov [whiteblock+2],ax
+
+		mov [whiteblock+6],1
+
+	initwinflag: ; 还原胜利标志
+		mov WinFlag,0	
+
+		mov ecx,300
+	SetMap:  ; 用循环拷贝地图，保障原始地图可以一直使用
+		mov ax,[roundone_map+ecx*2-2]
+		mov [map+ecx*2-2],ax
+		loop SetMap
+
+		ret
+NewRound ENDP
+
+chooseMenu PROC  ; 选择菜单函数
 	.IF WhichMenu == 0   ;开始界面
-		.IF eax == 38
+		.IF eax == 38 || eax == 87   ; 识别向上按键和w
 			.IF SelectMenu > 0
-				dec SelectMenu
+				dec SelectMenu  
 				ret
 			.ENDIF
 		.ENDIF
-		.IF eax == 40
+		.IF eax == 40 || eax == 83  ; 识别向下按键和s
 			.IF SelectMenu < 2
 				inc SelectMenu
 				ret
 			.ENDIF
 		.ENDIF
-		.IF eax == 13
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
 			.IF SelectMenu == 0
-				inc WhichMenu
+				mov WhichMenu,1
 				ret
 			.ELSEIF SelectMenu == 1
 				mov WhichMenu,4
@@ -274,31 +337,32 @@ chooseMenu PROC
 			.ENDIF
 		.ENDIF
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
-		.IF eax == 38
+		.IF eax == 38 || eax == 87   ; 识别向上按键和w
 			.IF SelectMenu > 0
 				dec SelectMenu
 				ret
 			.ENDIF
 		.ENDIF
-		.IF eax == 40
+		.IF eax == 40 || eax == 83  ; 识别向下按键和s
 			.IF SelectMenu < 1
 				inc SelectMenu
 				ret
 			.ENDIF
 		.ENDIF
-		.IF eax == 13
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
 			.IF SelectMenu == 0
 				mov EnterKeyHold,0
-				inc WhichMenu
+				mov WhichMenu,2
+				call NewRound    ; 每次进入游戏都会初始化游戏页面以及数据
 				ret
 			.ELSEIF SelectMenu == 1
-				dec WhichMenu
-				dec SelectMenu
+				mov WhichMenu,0
+				mov SelectMenu,0
 				ret
 			.ENDIF
 		.ENDIF
 	.ELSEIF WhichMenu == 4   ;帮助界面
-		.IF eax == 13
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
 			mov WhichMenu,0
 			ret
 		.ENDIF
@@ -335,102 +399,61 @@ PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 	local font: DWORD
 
-	invoke  BeginPaint, hWnd, addr ps
-	mov hdc, eax
+	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
+	mov hdc, eax                    ; 绘画页面句柄
+
+	; 创建并设置字体
+	INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+	mov font, eax
+	INVOKE SelectObject,hdcMempage, eax
+
+	; 画上黑色背景
+	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
+	
+	; 设置布局页面的背景颜色和字的颜色
+	INVOKE SetTextColor,hdcMempage,00FFFFFFh
+	INVOKE SetBkColor,hdcMempage,0
 
 	.IF WhichMenu == 0 ;开始界面
+		INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
+		INVOKE TextOutA,hdcMempage,266,288,offset helpText,4  ;640/2-54=266
+		INVOKE TextOutA,hdcMempage,267,368,offset exitText,4  ;640/2-53=267
 
-		invoke GetStockObject,BLACK_BRUSH
-		invoke SelectObject,hdcMem,eax
-		mov holdbr,eax
-
-		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMem,holdbr
-
-		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
-
-		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-		mov font, eax
-		INVOKE SelectObject,hdc, eax
-
-		INVOKE SetTextColor,hdc,00FFFFFFh
-		INVOKE SetBkColor,hdc,0
-
-		;根据选择菜单，分别绘制不同样式的菜单项
+		INVOKE SetTextColor,hdcMempage,0
+		INVOKE SetBkColor,hdcMempage,00FFFFFFh
+		; 给选中的菜单设置相反的背景与字色
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE TextOutA,hdcMempage,266,288,offset helpText,4  ;640/2-54=266
 		.ELSEIF SelectMenu == 2
-			INVOKE TextOutA,hdc,253,208,offset startText,5  ;640/2-67=253
-			INVOKE TextOutA,hdc,266,288,offset helpText,4  ;640/2-54=266
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE TextOutA,hdcMempage,267,368,offset exitText,4  ;640/2-53=267
 		.ENDIF
 
 		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
+		
+		INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240
+		INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5  ;640/2-69=251
 
-		invoke GetStockObject,BLACK_BRUSH
-		invoke SelectObject,hdcMem,eax
-		mov holdbr,eax
-
-		invoke Rectangle,hdcMem,0,0,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMem,holdbr
-
-		invoke BitBlt,hdc,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMem,0,0,SRCCOPY
-
-		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-		mov font, eax
-		INVOKE SelectObject,hdc, eax
-
-		INVOKE SetTextColor,hdc,00FFFFFFh
-		INVOKE SetBkColor,hdc,0
-
-		;根据选择菜单，分别绘制不同样式的菜单项
+		INVOKE SetTextColor,hdcMempage,0
+		INVOKE SetBkColor,hdcMempage,00FFFFFFh
+		; 给选中的菜单设置相反的背景与字色
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
+			INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5  ;640/2-69=251
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdc,251,208,offset PVPText,5  ;640/2-69=251
-			INVOKE SetTextColor,hdc,0
-			INVOKE SetBkColor,hdc,00FFFFFFh
-			INVOKE TextOutA,hdc,240,368,offset BackText,6  ;640/2-80=240
+			INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240
 		.ENDIF
 
 		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 2                    ;游戏界面
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMem, eax
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMem2, eax 
+		
+		; 把背景图绘制在布局页面上
+		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMembg, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
 
-		INVOKE LoadImageA, NULL, offset IDB_PNG1_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov blackPicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDB_PNG2_PATH, 0, 32, 32, LR_LOADFROMFILE
-		mov whitePicBitmap, eax
-		INVOKE LoadImageA, NULL, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
-		mov bgPicBitmap, eax
-
-		INVOKE SelectObject, hdcMem, bgPicBitmap
-		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
-
-		INVOKE SelectObject, hdcMem, blackPicBitmap
-		INVOKE SelectObject, hdcMem2, whitePicBitmap
-
+		; 这部分两层循环实现根据地图块上的数字实现给布局页面对应位置画上不同的色块
 		mov	esi, offset map
 		mov ecx, 15
 	Lx: ;按行loop
@@ -453,7 +476,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 31, 31, hdcMem, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemblack, 0, 0, SRCCOPY
 			pop ecx
 		.ELSEIF ax == 2
 			mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
@@ -470,7 +493,7 @@ PaintProc PROC USES ecx eax ebx esi,
 			add bl, 15
 			sal bx, 5
 			push ecx
-			INVOKE BitBlt, hdc, ax, bx, 31, 31, hdcMem2, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemwhite, 0, 0, SRCCOPY
 			pop ecx
 		.ENDIF
 		add esi, type map
@@ -482,22 +505,18 @@ PaintProc PROC USES ecx eax ebx esi,
 		cmp ecx, 0
 		jne Lx
 
-		INVOKE BitBlt, hdc, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMem, 0, 0, SRCCOPY
-		INVOKE BitBlt, hdc, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMem2, 0, 0, SRCCOPY
+		; 在布局页面是画上两个主角
+		INVOKE BitBlt, hdcMempage, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMemblack, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
 
-		invoke DeleteDC, hdcMem
-		invoke DeleteDC, hdcMem2
 	.ELSEIF WhichMenu == 3   ;结束界面
 	.ELSEIF WhichMenu == 4   ;帮助界面
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMem, eax
 
-		INVOKE LoadImageA, NULL, offset IDR_HELP_PATH, 0, 640, 480, LR_LOADFROMFILE
-		mov helpPicBitmap, eax
-
-		INVOKE SelectObject, hdcMem, helpPicBitmap
-		INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMem, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
 	.ENDIF
+
+	; 最后把准备好的布局页面一次画到显示窗口上
+	INVOKE BitBlt, hdc, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMempage, 0, 0, SRCCOPY
 
 	invoke EndPaint, hWnd, addr ps
 	ret
@@ -944,7 +963,8 @@ L3:          ;清除所有子弹
 	mov WORD PTR [edx+6],0
 	add edx,8
 	loop L3
-	INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
+	mov WhichMenu,0
+	;INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
 	ret
 someOneDead ENDP
 
