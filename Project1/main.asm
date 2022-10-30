@@ -248,6 +248,10 @@ WinProc PROC,
 		INVOKE SelectObject, hdcMemwhite, whitePicBitmap
 		INVOKE SelectObject, hdcMemhelp, helpPicBitmap
 
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font, eax
+		INVOKE SelectObject,hdcMempage, eax
+
 		; 释放当前窗口DC
 		invoke ReleaseDC,hWnd,hdc
 
@@ -299,7 +303,7 @@ NewRound PROC  ; 进入游戏实现自动初始化
 
 		mov [whiteblock+6],1
 
-	initwinflag: ; 还原胜利标志
+	initwinflag: ; 还原无胜利标志
 		mov WinFlag,0	
 
 		mov ecx,300
@@ -352,6 +356,7 @@ chooseMenu PROC  ; 选择菜单函数
 		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
 			.IF SelectMenu == 0
 				mov EnterKeyHold,0
+				mov SpaceKeyHold,0
 				mov WhichMenu,2
 				call NewRound    ; 每次进入游戏都会初始化游戏页面以及数据
 				ret
@@ -360,6 +365,11 @@ chooseMenu PROC  ; 选择菜单函数
 				mov SelectMenu,0
 				ret
 			.ENDIF
+		.ENDIF
+	.ELSEIF WhichMenu == 3   ;帮助界面
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
+			mov WhichMenu,1
+			ret
 		.ENDIF
 	.ELSEIF WhichMenu == 4   ;帮助界面
 		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
@@ -397,15 +407,12 @@ ErrorHandler ENDP
 
 PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
-	local font: DWORD
 
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
 	; 创建并设置字体
-	INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-	mov font, eax
-	INVOKE SelectObject,hdcMempage, eax
+	
 
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
@@ -430,12 +437,10 @@ PaintProc PROC USES ecx eax ebx esi,
 			INVOKE TextOutA,hdcMempage,267,368,offset exitText,4  ;640/2-53=267
 		.ENDIF
 
-		INVOKE DeleteObject,font
-
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
-		
-		INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240
+
 		INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5  ;640/2-69=251
+		INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240	
 
 		INVOKE SetTextColor,hdcMempage,0
 		INVOKE SetBkColor,hdcMempage,00FFFFFFh
@@ -445,8 +450,6 @@ PaintProc PROC USES ecx eax ebx esi,
 		.ELSEIF SelectMenu == 1
 			INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240
 		.ENDIF
-
-		INVOKE DeleteObject,font
 
 	.ELSEIF WhichMenu == 2                    ;游戏界面
 		
@@ -510,8 +513,14 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
 
 	.ELSEIF WhichMenu == 3   ;结束界面
+		.IF WinFlag == 1
+			INVOKE TextOutA,hdcMempage,200,170,offset blackWinMsg,9  ; 绘制黑方胜利结束页面语言
+		.ELSE 
+			INVOKE TextOutA,hdcMempage,200,170,offset whiteWinMsg,9 ; 绘制白方胜利结束页面语言
+		.ENDIF
+		INVOKE TextOutA,hdcMempage,60,300,offset endbacktip1,20  ; press enter or space
+		INVOKE TextOutA,hdcMempage,170,350,offset endbacktip2,11  ; to comeback
 	.ELSEIF WhichMenu == 4   ;帮助界面
-
 		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
 	.ENDIF
 
@@ -932,8 +941,9 @@ isBulletsHit ENDP
 someOneDead PROC USES ecx edx
 ;输入参数：ax，指被击中方的color(1/2)
 ;------------------------------------
-	mov WinFlag,1  ;将胜利标志位置1
-	.IF ax == 1
+	
+	.IF ax == 1 ; 如果被击中的是黑色，那么白色胜利
+		mov WinFlag,2  ;将胜利标志位置2
 		mov [blackblock],999
 		mov [blackblock+2],999
 		mov ecx,300
@@ -943,7 +953,8 @@ someOneDead PROC USES ecx edx
 		sal ax,1
 		mov [map+ax],1
 		loop L1
-	.ELSE
+	.ELSE  ; 如果被击中的是白色，黑色胜利
+		mov WinFlag,1  ;将胜利标志位置1
 		mov [whiteblock],999
 		mov [whiteblock+2],999
 		mov ecx,300
@@ -963,8 +974,9 @@ L3:          ;清除所有子弹
 	mov WORD PTR [edx+6],0
 	add edx,8
 	loop L3
-	mov WhichMenu,0
-	;INVOKE MessageBox, hMainWnd, ADDR youWinMsg, ADDR WindowName, MB_OK
+
+	mov WhichMenu,3
+
 	ret
 someOneDead ENDP
 

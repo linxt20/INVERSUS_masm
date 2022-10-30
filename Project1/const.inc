@@ -99,8 +99,10 @@ className				BYTE	"ASMWin",0              ; 窗口类名
 
 ErrorTitle				BYTE	"Error",0                  ; 错误警告弹窗标题
 
-blackWinMsg			   BYTE	"Black Win!",0               ; 黑方胜利提示   unused
-whiteWinMsg            BYTE "White Win!",0              ; 白方胜利提示   unused
+blackWinMsg			   BYTE	"Black Win",0               ; 黑方胜利提示   
+whiteWinMsg            BYTE "White Win",0              ; 白方胜利提示   
+endbacktip1                BYTE "press enter or space",0 ; 结束页面提示语言
+endbacktip2                BYTE "to comeback",0 ; 结束页面提示语言
 
 startText				BYTE	"start",0                  ; 开始游戏标签     
 helpText				BYTE	"help",0                  ; 控制帮助文档标签
@@ -151,6 +153,8 @@ whiteblock				WORD 452,292,23,1
 roundone_black_initpos   WORD 164,164
 roundone_white_initpos   WORD 452,292
 
+; 字体变量
+font                   DWORD ?
 
 ; 每一轮地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 roundone_map WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
