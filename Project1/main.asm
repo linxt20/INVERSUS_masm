@@ -219,8 +219,7 @@ WinProc PROC,
 		invoke CreateCompatibleDC,hdc
 		mov hdcMempage,eax
 		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
-		mov hbitmap,eax
-		invoke SelectObject,hdcMempage,hbitmap
+		invoke SelectObject,hdcMempage,eax
 
 		; 四个主要图片的显示句柄
 		INVOKE CreateCompatibleDC, hdc
@@ -232,21 +231,15 @@ WinProc PROC,
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemhelp, eax
 
-		; 四个主要图片的存储句柄
+		; 四个主要图片存储进句柄
 		INVOKE LoadImageA, hdc, offset IDB_PNG1_PATH, 0, 0, 0, LR_LOADFROMFILE
-		mov blackPicBitmap, eax
+		INVOKE SelectObject, hdcMemblack, eax
 		INVOKE LoadImageA, hdc, offset IDB_PNG2_PATH, 0, 0, 0, LR_LOADFROMFILE
-		mov whitePicBitmap, eax
+		INVOKE SelectObject, hdcMemwhite, eax
 		INVOKE LoadImageA, hdc, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
-		mov bgPicBitmap, eax
+		INVOKE SelectObject, hdcMembg, eax
 		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
-		mov helpPicBitmap, eax
-
-		; 存储句柄与显示句柄之间的链接绑定
-		INVOKE SelectObject, hdcMembg, bgPicBitmap
-		INVOKE SelectObject, hdcMemblack, blackPicBitmap
-		INVOKE SelectObject, hdcMemwhite, whitePicBitmap
-		INVOKE SelectObject, hdcMemhelp, helpPicBitmap
+		INVOKE SelectObject, hdcMemhelp, eax
 
 		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font, eax
@@ -367,7 +360,7 @@ chooseMenu PROC  ; 选择菜单函数
 			.ENDIF
 		.ENDIF
 	.ELSEIF WhichMenu == 3   ;帮助界面
-		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
+		.IF eax == 82 ; 确认键为r
 			mov WhichMenu,1
 			ret
 		.ENDIF
@@ -512,14 +505,37 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE BitBlt, hdcMempage, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMemblack, 0, 0, SRCCOPY
 		INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
 
+			mov ecx,10
+		L1:
+			push ecx
+			mov esi,offset bullets
+			mov eax,ecx
+			dec ax
+			sal ax,3
+			add esi,eax
+
+			mov ax,WORD PTR [esi+4]
+			mov bx,[esi]
+			sub bx,10
+			mov dx,[esi+2]
+			sub dx,10
+			.IF ax == 1
+			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemblack, 0, 0, SRCCOPY
+			.ELSEIF ax==2
+			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemwhite, 0, 0, SRCCOPY
+			.ENDIF
+			pop ecx
+			dec ecx
+			jne L1
+
+
 	.ELSEIF WhichMenu == 3   ;结束界面
 		.IF WinFlag == 1
 			INVOKE TextOutA,hdcMempage,200,170,offset blackWinMsg,9  ; 绘制黑方胜利结束页面语言
 		.ELSE 
 			INVOKE TextOutA,hdcMempage,200,170,offset whiteWinMsg,9 ; 绘制白方胜利结束页面语言
 		.ENDIF
-		INVOKE TextOutA,hdcMempage,60,300,offset endbacktip1,20  ; press enter or space
-		INVOKE TextOutA,hdcMempage,170,350,offset endbacktip2,11  ; to comeback
+		INVOKE TextOutA,hdcMempage,60,320,offset endbacktip,19  ; press r to comeback
 	.ELSEIF WhichMenu == 4   ;帮助界面
 		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
 	.ENDIF
@@ -616,6 +632,7 @@ TimerPROC PROC
 			cmp EnterKeyHold,1
 			jne TT@5
 			invoke emitBullet,[whiteblock],[whiteblock+2],2,[whiteblock+6]
+			mov EnterKeyHold,0
 
 		TT@5:
 			cmp WKeyHold,1
@@ -697,12 +714,13 @@ TimerPROC PROC
 			cmp SpaceKeyHold,1
 			jne TimerTickReturn
 			invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
+			mov SpaceKeyHold,0
 		.ENDIF
 	.ENDIF
 
-TimerTickReturn:
-	ret
-
+	TimerTickReturn:
+		ret
+		
 TimerPROC ENDP
 
 ;--------------------------------------------------------------
@@ -772,13 +790,13 @@ L1:
 
 	mov ax,WORD PTR [esi+6]   ;子弹合法，更新子弹位置
 	.IF ax == 1
-		sub WORD PTR [esi+2],32
+		sub WORD PTR [esi+2],16
 	.ELSEIF ax == 2
-		add WORD PTR [esi+2],32
+		add WORD PTR [esi+2],16
 	.ELSEIF ax == 3
-		sub WORD PTR [esi],32
+		sub WORD PTR [esi],16
 	.ELSEIF ax == 4
-		add WORD PTR [esi],32
+		add WORD PTR [esi],16
 	.ENDIF
 
 	; 如果子弹位置更新后超出地图，则将子弹颜色置为0，视为不合法
