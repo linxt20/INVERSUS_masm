@@ -221,7 +221,7 @@ WinProc PROC,
 		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
 		invoke SelectObject,hdcMempage,eax
 
-		; 四个主要图片的显示句柄
+		; 主要图片的显示句柄
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemblack, eax
 		INVOKE CreateCompatibleDC, hdc
@@ -230,8 +230,14 @@ WinProc PROC,
 		mov hdcMembg, eax
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemhelp, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap1, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap2, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap3, eax
 
-		; 四个主要图片存储进句柄
+		; 主要图片存储进句柄
 		INVOKE LoadImageA, hdc, offset IDB_PNG1_PATH, 0, 0, 0, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemblack, eax
 		INVOKE LoadImageA, hdc, offset IDB_PNG2_PATH, 0, 0, 0, LR_LOADFROMFILE
@@ -240,7 +246,14 @@ WinProc PROC,
 		INVOKE SelectObject, hdcMembg, eax
 		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemhelp, eax
+		INVOKE LoadImageA, hdc, offset IDR_MAP1_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE SelectObject, hdcMemMap1, eax
+		INVOKE LoadImageA, hdc, offset IDR_MAP2_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE SelectObject, hdcMemMap2, eax
+		INVOKE LoadImageA, hdc, offset IDR_MAP3_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE SelectObject, hdcMemMap3, eax
 
+		; 创建并设置字体
 		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font, eax
 		INVOKE SelectObject,hdcMempage, eax
@@ -280,10 +293,10 @@ WinProc ENDP
 
 NewRound PROC  ; 进入游戏实现自动初始化
 	initblock: ; 初始化黑白块初始位置
-		mov ax,[roundone_black_initpos]
+		mov ax,[black_initpos]
 		mov [blackblock],ax
 
-		mov ax,[roundone_black_initpos+2]
+		mov ax,[black_initpos+2]
 		mov [blackblock+2],ax
 
 		mov [blackblock+6],1
@@ -292,10 +305,10 @@ NewRound PROC  ; 进入游戏实现自动初始化
 
 		mov [blackblock+10],0
 
-		mov ax,[roundone_white_initpos]
+		mov ax,[white_initpos]
 		mov [whiteblock],ax
 
-		mov ax,[roundone_white_initpos+2]
+		mov ax,[white_initpos+2]
 		mov [whiteblock+2],ax
 
 		mov [whiteblock+6],1
@@ -309,7 +322,13 @@ NewRound PROC  ; 进入游戏实现自动初始化
 
 		mov ecx,300
 	SetMap:  ; 用循环拷贝地图，保障原始地图可以一直使用
-		mov ax,[roundone_map+ecx*2-2]
+		.IF edx == 0
+			mov ax,[roundone_map+ecx*2-2]
+		.ELSEIF edx == 1
+			mov ax,[roundtwo_map+ecx*2-2]
+		.ELSEIF edx == 2
+			mov ax,[roundthree_map+ecx*2-2]
+		.ENDIF
 		mov [map+ecx*2-2],ax
 		loop SetMap
 
@@ -358,8 +377,8 @@ chooseMenu PROC  ; 选择菜单函数
 			.IF SelectMenu == 0
 				mov EnterKeyHold,0
 				mov SpaceKeyHold,0
-				mov WhichMenu,2
-				call NewRound    ; 每次进入游戏都会初始化游戏页面以及数据
+				mov WhichMenu,5
+				mov SelectMenu,0
 				ret
 			.ELSEIF SelectMenu == 1
 				mov WhichMenu,0
@@ -378,7 +397,27 @@ chooseMenu PROC  ; 选择菜单函数
 			ret
 		.ENDIF
 	.ELSEIF WhichMenu == 5   ;选关界面
-		
+		.IF eax == 38 || eax == 87   ; 识别向上按键和w
+			.IF SelectMenu > 0
+				dec SelectMenu  
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 40 || eax == 83  ; 识别向下按键和s
+			.IF SelectMenu < 2
+				inc SelectMenu
+				ret
+			.ENDIF
+		.ENDIF
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space
+			mov EnterKeyHold,0
+			mov SpaceKeyHold,0
+			mov WhichMenu,2
+			mov edx,SelectMenu
+			call NewRound    ; 每次进入游戏都会初始化游戏页面以及数据
+			mov SelectMenu,0
+			ret
+		.ENDIF
 	.ENDIF
 	ret
 chooseMenu ENDP
@@ -413,9 +452,6 @@ PaintProc PROC USES ecx eax ebx esi,
 
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
-
-	; 创建并设置字体
-	
 
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
@@ -546,9 +582,23 @@ PaintProc PROC USES ecx eax ebx esi,
 			INVOKE TextOutA,hdcMempage,200,170,offset whiteWinMsg,9 ; 绘制白方胜利结束页面语言
 		.ENDIF
 		INVOKE TextOutA,hdcMempage,60,320,offset endbacktip,19  ; press r to comeback
+
 	.ELSEIF WhichMenu == 4   ;帮助界面
 		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
+
 	.ELSEIF WhichMenu == 5   ;选关界面
+		; 将三张地图图片绘制到屏幕
+		INVOKE BitBlt, hdcMempage, 240, 30, 160, 120, hdcMemMap1, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 240, 180, 160, 120, hdcMemMap2, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 240, 330, 160, 120, hdcMemMap3, 0, 0, SRCCOPY
+		; 分别绘制箭头在不同的位置
+		.IF SelectMenu == 0
+			INVOKE TextOutA,hdcMempage,170,60,offset arrowText,2
+		.ELSEIF SelectMenu == 1
+			INVOKE TextOutA,hdcMempage,170,210,offset arrowText,2
+		.ELSEIF SelectMenu == 2
+			INVOKE TextOutA,hdcMempage,170,360,offset arrowText,2
+		.ENDIF
 	.ENDIF
 
 	; 最后把准备好的布局页面一次画到显示窗口上
