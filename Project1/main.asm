@@ -248,6 +248,12 @@ WinProc PROC,
 
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemhelp, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap1, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap2, eax
+		INVOKE CreateCompatibleDC, hdc
+		mov hdcMemMap3, eax
 
 		; 主要图片存储进句柄
 		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
@@ -475,7 +481,7 @@ PaintProc PROC USES ecx eax ebx esi,
 	mov hdc, eax                    ; 绘画页面句柄
 
 	; 创建并设置字体
-	
+	INVOKE SelectObject,hdcMempage, font
 
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
@@ -597,6 +603,14 @@ PaintProc PROC USES ecx eax ebx esi,
 			pop ecx
 			dec ecx
 			jne L1
+
+			.IF statusFlag == 3  ; 如果暂停
+				INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+				mov tempFont, eax
+				INVOKE SelectObject,hdcMempage, eax
+				INVOKE TextOutA,hdcMempage,0,220,offset pauseText,31  ; 绘制暂停中提示
+				INVOKE DeleteObject, tempFont
+			.ENDIF
 
 
 	.ELSEIF WhichMenu == 3   ;结束界面
