@@ -37,8 +37,6 @@ BULLET ENDS
 MAIN_WINDOW_STYLE = WS_VISIBLE+WS_DLGFRAME+WS_CAPTION+WS_BORDER+WS_SYSMENU \
 +WS_MAXIMIZEBOX+WS_MINIMIZEBOX+WS_THICKFRAME
 
-; 黑色笔刷
-BLACK_BRUSH				EQU		4
 ; 窗口长宽
 WINDOW_WIDTH			EQU		640
 WINDOW_HEIGHT			EQU		480
@@ -134,6 +132,7 @@ hdcMemwhite				DWORD ?   ; 白色块显示句柄
 hdcMemblack				DWORD ?   ; 黑色块显示句柄
 hdcMembg                DWORD ?    ; 背景块显示句柄
 hdcMemhelp                DWORD ?    ; 帮助图显示句柄
+hdctest                DWORD ?
 
 ; 菜单选项变量
 WhichMenu				DWORD 0		; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面

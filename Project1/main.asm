@@ -221,23 +221,32 @@ WinProc PROC,
 		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
 		invoke SelectObject,hdcMempage,eax
 
-		; 四个主要图片的显示句柄
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemblack, eax
+		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+		invoke SelectObject,hdcMemblack,eax
+		invoke CreateSolidBrush, 0000000h
+		invoke SelectObject, hdcMemblack, eax
+		INVOKE Rectangle,hdcMemblack,-1,-1,1000,1000
+
 		INVOKE CreateCompatibleDC, hdc
-		mov hdcMemwhite, eax 
+		mov hdcMemwhite, eax
+		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+		invoke SelectObject,hdcMemwhite,eax
+		invoke CreateSolidBrush, 0ffffffh
+		invoke SelectObject, hdcMemwhite, eax
+		INVOKE Rectangle,hdcMemwhite,-1,-1,1000,1000
+
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMembg, eax
+		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+		invoke SelectObject,hdcMembg,eax
+		invoke CreateSolidBrush, 0cca700h
+		invoke SelectObject, hdcMembg, eax
+		INVOKE Rectangle,hdcMembg,-1,-1,1000,1000
+
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemhelp, eax
-
-		; 四个主要图片存储进句柄
-		INVOKE LoadImageA, hdc, offset IDB_PNG1_PATH, 0, 0, 0, LR_LOADFROMFILE
-		INVOKE SelectObject, hdcMemblack, eax
-		INVOKE LoadImageA, hdc, offset IDB_PNG2_PATH, 0, 0, 0, LR_LOADFROMFILE
-		INVOKE SelectObject, hdcMemwhite, eax
-		INVOKE LoadImageA, hdc, offset IDR_BG1_PATH, 0, WINDOW_WIDTH, WINDOW_HEIGHT, LR_LOADFROMFILE
-		INVOKE SelectObject, hdcMembg, eax
 		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemhelp, eax
 
@@ -404,9 +413,9 @@ PaintProc PROC USES ecx eax ebx esi,
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
-	; 创建并设置字体
-	
-
+	;INVOKE GetStockObject,BLACK_BRUSH
+	;INVOKE SelectObject, hdcMemblack ,eax
+	;INVOKE Rectangle,hdcMemblack,0,0,200,200
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
 	
@@ -506,7 +515,7 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
 
 			mov ecx,10
-		L1:
+		L1:                     ; 循环画子弹
 			push ecx
 			mov esi,offset bullets
 			mov eax,ecx
@@ -515,11 +524,11 @@ PaintProc PROC USES ecx eax ebx esi,
 			add esi,eax
 
 			mov ax,WORD PTR [esi+4]
-			mov bx,[esi]
+			mov bx,[esi]         ; 子弹目前是正方形，为了使其中心就是之前的子弹点，因此正方形的起始点需要是(-10,-10),目前正方形子弹的大小为20*20像素
 			sub bx,10
 			mov dx,[esi+2]
 			sub dx,10
-			.IF ax == 1
+			.IF ax == 1  
 			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemblack, 0, 0, SRCCOPY
 			.ELSEIF ax==2
 			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemwhite, 0, 0, SRCCOPY
@@ -527,7 +536,6 @@ PaintProc PROC USES ecx eax ebx esi,
 			pop ecx
 			dec ecx
 			jne L1
-
 
 	.ELSEIF WhichMenu == 3   ;结束界面
 		.IF WinFlag == 1
