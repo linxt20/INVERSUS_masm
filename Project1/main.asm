@@ -136,7 +136,7 @@ WinProc PROC,
 		@nenter1:
 			cmp eax,27 ;识别esc键
 			jne @nescape1
-			; call EscapeInMenu
+			call EscapeKeyDown
 		@nescape1: 
 			cmp eax,65 ;识别a键
 			jne @na1
@@ -256,7 +256,6 @@ WinProc PROC,
 		; 创建并设置字体
 		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font, eax
-		INVOKE SelectObject,hdcMempage, eax
 
 		; 释放当前窗口DC
 		invoke ReleaseDC,hWnd,hdc
@@ -291,6 +290,20 @@ WinProc PROC,
 		ret
 WinProc ENDP
 
+EscapeKeyDown PROC
+	.IF WhichMenu == 2
+		.IF statusFlag == 0
+			mov statusFlag, 3  ; 如果游戏处于正常对战中状态，将状态标志位修改为3，即暂停
+		.ELSEIF statusFlag == 3
+			mov statusFlag, 0  ; 若已经处于暂停状态，将状态恢复。
+		.ENDIF
+	.ELSEIF WhichMenu != 3     ; 对于除游戏中界面、游戏胜利界面之外的界面，将界面跳转回主界面
+		mov WhichMenu, 0
+		mov SelectMenu, 0
+	.ENDIF
+	ret
+EscapeKeyDown ENDP
+
 NewRound PROC  ; 进入游戏实现自动初始化
 	initblock: ; 初始化黑白块初始位置
 		mov ax,[black_initpos]
@@ -317,8 +330,8 @@ NewRound PROC  ; 进入游戏实现自动初始化
 
 		mov [whiteblock+10],0
 
-	initwinflag: ; 还原无胜利标志
-		mov WinFlag,0	
+	initstatusFlag: ; 还原无胜利标志
+		mov statusFlag,0	
 
 		mov ecx,300
 	SetMap:  ; 用循环拷贝地图，保障原始地图可以一直使用
@@ -354,6 +367,7 @@ chooseMenu PROC  ; 选择菜单函数
 				mov WhichMenu,1
 				ret
 			.ELSEIF SelectMenu == 1
+				;INVOKE ShellExecuteA, 
 				mov WhichMenu,4
 				ret
 			.ELSE
@@ -449,9 +463,13 @@ ErrorHandler ENDP
 
 PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
+	LOCAL tempFont:DWORD ; 临时字体，用来画暂停提示，画完即删
 
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
+
+	; 设置字体
+	INVOKE SelectObject,hdcMempage, font
 
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
@@ -574,9 +592,16 @@ PaintProc PROC USES ecx eax ebx esi,
 			dec ecx
 			jne L1
 
+			.IF statusFlag == 3  ; 如果暂停
+				INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+				mov tempFont, eax
+				INVOKE SelectObject,hdcMempage, eax
+				INVOKE TextOutA,hdcMempage,0,220,offset pauseText,31  ; 绘制暂停中提示
+				INVOKE DeleteObject, tempFont
+			.ENDIF
 
 	.ELSEIF WhichMenu == 3   ;结束界面
-		.IF WinFlag == 1
+		.IF statusFlag == 1
 			INVOKE TextOutA,hdcMempage,200,170,offset blackWinMsg,9  ; 绘制黑方胜利结束页面语言
 		.ELSE 
 			INVOKE TextOutA,hdcMempage,200,170,offset whiteWinMsg,9 ; 绘制白方胜利结束页面语言
@@ -611,7 +636,7 @@ PaintProc ENDP
 TimerPROC PROC
 
 	.IF WhichMenu == 2   ;游戏界面
-		.IF WinFlag == 0
+		.IF statusFlag == 0
 			call updateBullets
 
 			.IF WORD PTR [whiteblock+8] < 4
@@ -1036,7 +1061,7 @@ someOneDead PROC USES ecx edx
 ;------------------------------------
 	
 	.IF ax == 1 ; 如果被击中的是黑色，那么白色胜利
-		mov WinFlag,2  ;将胜利标志位置2
+		mov statusFlag,2  ;将胜利标志位置2
 		mov [blackblock],999
 		mov [blackblock+2],999
 		mov ecx,300
@@ -1047,7 +1072,7 @@ someOneDead PROC USES ecx edx
 		mov [map+ax],1
 		loop L1
 	.ELSE  ; 如果被击中的是白色，黑色胜利
-		mov WinFlag,1  ;将胜利标志位置1
+		mov statusFlag,1  ;将胜利标志位置1
 		mov [whiteblock],999
 		mov [whiteblock+2],999
 		mov ecx,300

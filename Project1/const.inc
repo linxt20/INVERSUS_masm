@@ -68,6 +68,8 @@ SetBkColor				PROTO STDCALL :DWORD,:DWORD
 TextOutA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ; 创建指定的字体
 CreateFontA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+; 运行windows命令函数
+ShellExecuteA			PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 
 ; 自定义函数声明区域
 PaintProc				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
@@ -93,6 +95,7 @@ PVPText					BYTE	"P V P",0               ; 双人小游戏模式标签
 PVEText					BYTE	"P V E",0               ; 单机模式标签     unused
 BackText				BYTE	"<-back",0              ; 返回上一级目录标签
 arrowText				BYTE	"->",0					; 指示地图选择标签
+pauseText				BYTE	"Pausing, press Esc to continue",0   ; 暂停标签
 
 IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0      ; 黑色块路径
 IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0      ; 白色块路径
@@ -199,7 +202,7 @@ bullets					BULLET 10 DUP(< -1,-1,0,0 >)
 currentBullet			WORD 0
 
 ; 状态变量
-WinFlag					WORD 0 ;是否胜利flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利
+statusFlag				WORD 0 ;状态flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利，3代表暂停
 
 ; 按键是否按下的指示变量
 UpKeyHold				DWORD 0 
