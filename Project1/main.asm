@@ -288,6 +288,10 @@ NewRound PROC  ; 进入游戏实现自动初始化
 
 		mov [blackblock+6],1
 
+		mov [blackblock+8],4
+
+		mov [blackblock+10],0
+
 		mov ax,[roundone_white_initpos]
 		mov [whiteblock],ax
 
@@ -295,6 +299,10 @@ NewRound PROC  ; 进入游戏实现自动初始化
 		mov [whiteblock+2],ax
 
 		mov [whiteblock+6],1
+
+		mov [whiteblock+8],4
+
+		mov [whiteblock+10],0
 
 	initwinflag: ; 还原无胜利标志
 		mov WinFlag,0	
@@ -369,6 +377,8 @@ chooseMenu PROC  ; 选择菜单函数
 			mov WhichMenu,0
 			ret
 		.ENDIF
+	.ELSEIF WhichMenu == 5   ;选关界面
+		
 	.ENDIF
 	ret
 chooseMenu ENDP
@@ -538,6 +548,7 @@ PaintProc PROC USES ecx eax ebx esi,
 		INVOKE TextOutA,hdcMempage,60,320,offset endbacktip,19  ; press r to comeback
 	.ELSEIF WhichMenu == 4   ;帮助界面
 		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
+	.ELSEIF WhichMenu == 5   ;选关界面
 	.ENDIF
 
 	; 最后把准备好的布局页面一次画到显示窗口上
@@ -552,6 +563,22 @@ TimerPROC PROC
 	.IF WhichMenu == 2   ;游戏界面
 		.IF WinFlag == 0
 			call updateBullets
+
+			.IF WORD PTR [whiteblock+8] < 4
+				inc WORD PTR [whiteblock+10]
+				.IF WORD PTR [whiteblock+10] == 100
+					mov WORD PTR [whiteblock+10],0
+					inc WORD PTR [whiteblock+8]
+				.ENDIF
+			.ENDIF
+
+			.IF WORD PTR [blackblock+8] < 4
+				inc WORD PTR [blackblock+10]
+				.IF WORD PTR [blackblock+10] == 100
+					mov WORD PTR [blackblock+10],0
+					inc WORD PTR [blackblock+8]
+				.ENDIF
+			.ENDIF
 
 			cmp UpKeyHold,1
 			jne TT@1
@@ -631,7 +658,10 @@ TimerPROC PROC
 		TT@4:
 			cmp EnterKeyHold,1
 			jne TT@5
-			invoke emitBullet,[whiteblock],[whiteblock+2],2,[whiteblock+6]
+			.IF WORD PTR [whiteblock+8] > 0
+				dec WORD PTR [whiteblock+8]
+				invoke emitBullet,[whiteblock],[whiteblock+2],2,[whiteblock+6]
+			.ENDIF
 			mov EnterKeyHold,0
 
 		TT@5:
@@ -713,7 +743,10 @@ TimerPROC PROC
 		TT@9:
 			cmp SpaceKeyHold,1
 			jne TimerTickReturn
-			invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
+			.IF WORD PTR [blackblock+8] > 0
+				dec WORD PTR [blackblock+8]
+				invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
+			.ENDIF
 			mov SpaceKeyHold,0
 		.ENDIF
 	.ENDIF
@@ -946,14 +979,6 @@ LoopExit:
 
 	ret
 updateBullets ENDP
-
-;-----------------------------------
-isBulletsHit PROC 
-;检查是否有子弹对冲而需要抵消
-;输入参数：ax：当前的子弹（）
-;----------------------------------
-
-isBulletsHit ENDP
 
 ;------------------------------------
 someOneDead PROC USES ecx edx

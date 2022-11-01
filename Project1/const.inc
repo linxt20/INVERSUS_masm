@@ -27,8 +27,8 @@ MSGStruct ENDS
 BULLET STRUCT
 	xCoor				SWORD ? ;单位：像素
 	yCoor				SWORD ? ;单位：像素
-	color				WORD ? ;1代表黑方射出的子弹（黑色），2代表白方，0代表不合法子弹
-	heading				WORD ? ;子弹的朝向，1代表上，2代表下，3代表左，4代表右
+	color				WORD ?  ;1代表黑方射出的子弹（黑色），2代表白方，0代表不合法子弹
+	heading				WORD ?  ;子弹的朝向，1代表上，2代表下，3代表左，4代表右
 BULLET ENDS
 
 
@@ -94,81 +94,82 @@ emitBullet				PROTO STDCALL :WORD,:WORD,:WORD,:WORD
 .data
 
 ; 字符串定义区域
-WindowName				BYTE	"INVERSUS ASM",0     ; 窗口名
+WindowName				BYTE	"INVERSUS ASM",0        ; 窗口名
 className				BYTE	"ASMWin",0              ; 窗口类名
 
-ErrorTitle				BYTE	"Error",0                  ; 错误警告弹窗标题
+ErrorTitle				BYTE	"Error",0               ; 错误警告弹窗标题
 
-blackWinMsg			   BYTE	"Black Win",0               ; 黑方胜利提示   
-whiteWinMsg            BYTE "White Win",0              ; 白方胜利提示   
-endbacktip                BYTE "press r to comeback",0 ; 结束页面提示语言
+blackWinMsg				BYTE	"Black Win",0           ; 黑方胜利提示   
+whiteWinMsg				BYTE	"White Win",0           ; 白方胜利提示   
+endbacktip				BYTE	"press r to comeback",0 ; 结束页面提示语言
 
-startText				BYTE	"start",0                  ; 开始游戏标签     
-helpText				BYTE	"help",0                  ; 控制帮助文档标签
-exitText				BYTE	"exit",0                   ; 退出游戏标签
+startText				BYTE	"start",0               ; 开始游戏标签     
+helpText				BYTE	"help",0                ; 控制帮助文档标签
+exitText				BYTE	"exit",0                ; 退出游戏标签
 PVPText					BYTE	"P V P",0               ; 双人小游戏模式标签
 PVEText					BYTE	"P V E",0               ; 单机模式标签     unused
-BackText				BYTE	"<-back",0                ; 返回上一级目录标签
+BackText				BYTE	"<-back",0              ; 返回上一级目录标签
 
-IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0     ; 黑色块路径
-IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0     ; 白色块路径
+IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0      ; 黑色块路径
+IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0      ; 白色块路径
 IDR_BG1_PATH			BYTE	"..\Project1\image\background.jpg",0 ; 背景块路径
-IDR_HELP_PATH			BYTE	"..\Project1\image\help.jpg",0      ; 控制帮助图片路径
+IDR_HELP_PATH			BYTE	"..\Project1\image\help.jpg",0       ; 控制帮助图片路径
 
 
 ; 结构变量定义区域
 ; Define the Application's Window class structure.
 MainWin WNDCLASS <NULL,WinProc,NULL,NULL,NULL,NULL,NULL, COLOR_WINDOW,NULL,className>
 ; 消息结构变量定义
-msg					MSGStruct <>
+msg						MSGStruct <>
 ; 画笔结构变量定义
-ps					 PAINTSTRUCT	<>
+ps						PAINTSTRUCT	<>
 
 ; 普通变量定义区域
 ; 句柄变量
-hMainWnd			 DWORD ?    ;总窗口句柄
-hInstance				DWORD ?   ; 用于创建调用进程的文件的句柄
-hdc						DWORD ?    ; 程序窗口的句柄
-hdcMempage				DWORD ?   ; 布局页面显示句柄
-hdcMemwhite				DWORD ?   ; 白色块显示句柄
-hdcMemblack				DWORD ?   ; 黑色块显示句柄
-hdcMembg                DWORD ?    ; 背景块显示句柄
-hdcMemhelp                DWORD ?    ; 帮助图显示句柄
+hMainWnd				DWORD ? ; 总窗口句柄
+hInstance				DWORD ? ; 用于创建调用进程的文件的句柄
+hdc						DWORD ? ; 程序窗口的句柄
+hdcMempage				DWORD ? ; 布局页面显示句柄
+hdcMemwhite				DWORD ? ; 白色块显示句柄
+hdcMemblack				DWORD ? ; 黑色块显示句柄
+hdcMembg                DWORD ? ; 背景块显示句柄
+hdcMemhelp				DWORD ? ; 帮助图显示句柄
 
 ; 菜单选项变量
-WhichMenu				DWORD 0		; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面
-SelectMenu				DWORD 0		  ; 正在选择的菜单项 0表示第一项
+WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面
+SelectMenu				DWORD 0 ; 正在选择的菜单项 0表示第一项
 
-; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向
-blackblock				WORD 164,164,23,1
-whiteblock				WORD 452,292,23,1
+; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向，第五位为剩余子弹数（每人上限为4）
+;第六位是冷却（子弹恢复）计数器，当达到100时（也即，子弹恢复时间为3秒）清零，并增加一发子弹
+blackblock				WORD 164,164,23,1,4,0
+whiteblock				WORD 452,292,23,1,4,0
 
 ; 每一轮黑白块的初始位置 第一个数是横向的刻度，第二个数是纵向的刻度
-roundone_black_initpos   WORD 164,164
-roundone_white_initpos   WORD 452,292
+roundone_black_initpos	WORD 164,164
+roundone_white_initpos	WORD 452,292
 
 ; 字体变量
-font                   DWORD ?
+font					DWORD ?
 
 ; 每一轮地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
-roundone_map WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		 WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
-		 WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		 WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+roundone_map			WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+						WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,1,1,1,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,0
+						WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+						WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ; 游戏中使用的临时地图数组，主要拷贝地图数组的内容，使地图数组能够反复利用
-map WORD 300 DUP(?)
+map						WORD 300 DUP(?)
 
 ;子弹数组，储存地图中的每颗子弹，在计时器中令所有子弹向指定方向移动一段距离
 bullets					BULLET 10 DUP(< -1,-1,0,0 >)  
@@ -176,7 +177,7 @@ bullets					BULLET 10 DUP(< -1,-1,0,0 >)
 currentBullet			WORD 0
 
 ; 状态变量
-WinFlag				WORD 0 ;是否胜利flag，0代表未胜利，游戏正常进行，1代表胜利，玩家无法继续操作
+WinFlag					WORD 0 ;是否胜利flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利
 
 ; 按键是否按下的指示变量
 UpKeyHold				DWORD 0 
