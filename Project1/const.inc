@@ -71,7 +71,6 @@ ShellExecuteA			PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ; 自定义函数声明区域
 PaintProc				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
 emitBullet				PROTO STDCALL :WORD,:WORD,:WORD,:WORD
-
 ;==================== DATA =======================
 .data
 
@@ -93,6 +92,33 @@ PVEText					BYTE	"P V E",0               ; 单机模式标签     unused
 BackText				BYTE	"<-back",0              ; 返回上一级目录标签
 arrowText				BYTE	"->",0					; 指示地图选择标签
 pauseText				BYTE	"Pausing, press Esc to continue",0   ; 暂停标签
+
+helptext_title1                byte     "game rule show",0
+helptext_title2                byte     "game control show",0
+helptext_hang1                byte     "INVERSUS is a shooting game, in the game, you need to",0  ; 53
+helptext_hang2                byte     "play for one of the black and white, and compared with",0  ;54
+helptext_hang3                byte     "the other party. The victory of the game goal is simple",0   ;55
+helptext_hang4               byte     "which is only to hit each other.",0     ;32
+helptext_hang5               byte      "Please note that the map is also divided into black and",0    ;55
+helptext_hang6               byte      "white two colors, you can only move in the area of the",0  ;54
+helptext_hang7               byte      "contrary to their own color, you can shoot to change",0  ;52
+helptext_hang8               byte      "the path of regional color so that you can make your",0       ;52
+helptext_hang9               byte      "role in this area.",0   ;18
+helptext_hang10_1              byte       "play 1: black block move by",0  ;27
+helptext_hang10_2              byte       "w",0
+helptext_hang10_3              byte       "s",0
+helptext_hang10_4              byte       "a",0
+helptext_hang10_5              byte       "d",0
+helptext_hang10_6              byte       "shoot by",0  ; 8
+helptext_hang10_7             byte        "space",0  ;5
+helptext_hang11_1              byte       "play 2: white block move by",0  ;27
+helptext_hang11_2              byte       "up",0    ; 2
+helptext_hang11_3              byte       "down",0  ; 4
+helptext_hang11_4              byte       "<-",0   ;  2
+helptext_hang11_5              byte       "->",0   ; 2
+helptext_hang11_6              byte       "shoot by",0  ; 8
+helptext_hang11_7             byte        "enter",0  ;5
+
 
 IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0      ; 黑色块路径
 IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0      ; 白色块路径
@@ -139,7 +165,9 @@ black_initpos			WORD 164,164
 white_initpos			WORD 452,292
 
 ; 字体变量
-font					DWORD ?
+font_50					DWORD ?  ; 高度为50像素的字体
+font_40					DWORD ?  ; 高度为40像素的字体
+font_20					DWORD ?  ; 高度为20像素的字体
 
 ; 每一轮地图数组，20*15，0代表该格为空，1代表黑格，2代表白格
 roundone_map			WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

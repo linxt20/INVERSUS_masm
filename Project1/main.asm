@@ -215,39 +215,16 @@ WinProc PROC,
 		invoke GetDC,hWnd
 		mov hdc,eax
 
-		; 布局页面的句柄以及其显示的句柄创建设置
-		invoke CreateCompatibleDC,hdc
-		mov hdcMempage,eax
-		invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMempage,eax
+		; 创建并设置字体
+		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font_50, eax
+		INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font_40, eax
+		INVOKE CreateFontA,20,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font_20, eax
 
-		; 四个主要图片的显示句柄
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMemblack, eax
-		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMemblack,eax
-		invoke CreateSolidBrush, 0000000h
-		invoke SelectObject, hdcMemblack, eax
-		INVOKE Rectangle,hdcMemblack,-1,-1,1000,1000
+		call DrawBasicPic
 
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMemwhite, eax
-		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMemwhite,eax
-		invoke CreateSolidBrush, 0ffffffh
-		invoke SelectObject, hdcMemwhite, eax
-		INVOKE Rectangle,hdcMemwhite,-1,-1,1000,1000
-
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMembg, eax
-		invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-		invoke SelectObject,hdcMembg,eax
-		invoke CreateSolidBrush, 0cca700h
-		invoke SelectObject, hdcMembg, eax
-		INVOKE Rectangle,hdcMembg,-1,-1,1000,1000
-
-		INVOKE CreateCompatibleDC, hdc
-		mov hdcMemhelp, eax
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemMap1, eax
 		INVOKE CreateCompatibleDC, hdc
@@ -256,18 +233,12 @@ WinProc PROC,
 		mov hdcMemMap3, eax
 
 		; 主要图片存储进句柄
-		INVOKE LoadImageA, hdc, offset IDR_HELP_PATH, 0, 0, 0, LR_LOADFROMFILE
-		INVOKE SelectObject, hdcMemhelp, eax
 		INVOKE LoadImageA, hdc, offset IDR_MAP1_PATH, 0, 160, 120, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemMap1, eax
 		INVOKE LoadImageA, hdc, offset IDR_MAP2_PATH, 0, 160, 120, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemMap2, eax
 		INVOKE LoadImageA, hdc, offset IDR_MAP3_PATH, 0, 160, 120, LR_LOADFROMFILE
 		INVOKE SelectObject, hdcMemMap3, eax
-
-		; 创建并设置字体
-		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-		mov font, eax
 
 		; 释放当前窗口DC
 		invoke ReleaseDC,hWnd,hdc
@@ -473,15 +444,102 @@ ErrorHandler PROC
 	ret
 ErrorHandler ENDP
 
+DrawBasicPic PROC
+	; 布局页面的句柄以及其显示的句柄创建设置
+	invoke CreateCompatibleDC,hdc
+	mov hdcMempage,eax
+	invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMempage,eax
+	
+	; 绘制黑色并存在hdcmemblack
+	INVOKE CreateCompatibleDC, hdc
+	mov hdcMemblack, eax
+	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMemblack,eax
+	invoke CreateSolidBrush, 0000000h
+	invoke SelectObject, hdcMemblack, eax
+	INVOKE Rectangle,hdcMemblack,-1,-1,1000,1000
+
+	; 绘制白色并存在hdcmemwhite
+	INVOKE CreateCompatibleDC, hdc
+	mov hdcMemwhite, eax
+	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMemwhite,eax
+	invoke CreateSolidBrush, 0ffffffh
+	invoke SelectObject, hdcMemwhite, eax
+	INVOKE Rectangle,hdcMemwhite,-1,-1,1000,1000
+	
+	; 绘制背景颜色并存在hdcmembg
+	INVOKE CreateCompatibleDC, hdc
+	mov hdcMembg, eax
+	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMembg,eax
+	invoke CreateSolidBrush, 0cca700h
+	invoke SelectObject, hdcMembg, eax
+	INVOKE Rectangle,hdcMembg,-1,-1,1000,1000
+	
+	; 绘制帮助文档并存在hdcmemhelp
+	INVOKE CreateCompatibleDC, hdc
+	mov hdcMemhelp, eax
+	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMemhelp,eax
+
+	invoke CreateSolidBrush, 02BA245h
+	invoke SelectObject, hdcMemhelp, eax
+	INVOKE Rectangle,hdcMemhelp,331,280,360,310  ; w
+	INVOKE Rectangle,hdcMemhelp,300,310,330,340  ; a
+	INVOKE Rectangle,hdcMemhelp,331,310,360,340  ; s
+	INVOKE Rectangle,hdcMemhelp,361,310,390,340  ; d
+	INVOKE Rectangle,hdcMemhelp,485,295,555,325  ; space
+	INVOKE Rectangle,hdcMemhelp,341,340,400,370  ; 上
+	INVOKE Rectangle,hdcMemhelp,300,370,340,400  ; 下
+	INVOKE Rectangle,hdcMemhelp,341,370,400,400  ; 左
+	INVOKE Rectangle,hdcMemhelp,401,370,440,400  ; 右
+	INVOKE Rectangle,hdcMemhelp,535,355,605,385  ; enter
+
+	INVOKE SetTextColor,hdcMemhelp,00FFFFFFh
+	INVOKE SetBkColor,hdcMemhelp,0
+	INVOKE SelectObject,hdcMemhelp, font_50
+	INVOKE TextOutA,hdcMemhelp,0,0,offset helptext_title1,14
+	INVOKE TextOutA,hdcMemhelp,0,230,offset helptext_title2,17
+	INVOKE SelectObject,hdcMemhelp, font_20
+	INVOKE TextOutA,hdcMemhelp,0,50,offset helptext_hang1,53
+	INVOKE TextOutA,hdcMemhelp,0,70,offset helptext_hang2,54
+	INVOKE TextOutA,hdcMemhelp,0,90,offset helptext_hang3,55
+	INVOKE TextOutA,hdcMemhelp,0,110,offset helptext_hang4,32
+	INVOKE TextOutA,hdcMemhelp,0,130,offset helptext_hang5,55
+	INVOKE TextOutA,hdcMemhelp,0,150,offset helptext_hang6,54
+	INVOKE TextOutA,hdcMemhelp,0,170,offset helptext_hang7,52
+	INVOKE TextOutA,hdcMemhelp,0,190,offset helptext_hang8,52
+	INVOKE TextOutA,hdcMemhelp,0,210,offset helptext_hang9,18
+	INVOKE TextOutA,hdcMemhelp,0,300,offset helptext_hang10_1,27
+	INVOKE TextOutA,hdcMemhelp,390,300,offset helptext_hang10_6,8
+	INVOKE TextOutA,hdcMemhelp,0,360,offset helptext_hang11_1,27
+	INVOKE TextOutA,hdcMemhelp,440,360,offset helptext_hang11_6,8
+
+	INVOKE SetBkColor,hdcMemhelp,02BA245h
+	INVOKE TextOutA,hdcMemhelp,336,285,offset helptext_hang10_2,1
+	INVOKE TextOutA,hdcMemhelp,336,315,offset helptext_hang10_3,1
+	INVOKE TextOutA,hdcMemhelp,305,315,offset helptext_hang10_4,1
+	INVOKE TextOutA,hdcMemhelp,366,315,offset helptext_hang10_5,1
+	INVOKE TextOutA,hdcMemhelp,490,300,offset helptext_hang10_7,5
+	INVOKE TextOutA,hdcMemhelp,355,345,offset helptext_hang11_2,2
+	INVOKE TextOutA,hdcMemhelp,346,375,offset helptext_hang11_3,4
+	INVOKE TextOutA,hdcMemhelp,305,375,offset helptext_hang11_4,2
+	INVOKE TextOutA,hdcMemhelp,406,375,offset helptext_hang11_5,2
+	INVOKE TextOutA,hdcMemhelp,540,360,offset helptext_hang11_7,5
+
+	ret
+DrawBasicPic ENDP
+
 PaintProc PROC USES ecx eax ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
-	LOCAL tempFont:DWORD ; 临时字体，用来画暂停提示，画完即删
 
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
 	; 创建并设置字体
-	INVOKE SelectObject,hdcMempage, font
+	INVOKE SelectObject,hdcMempage, font_50
 
 	; 画上黑色背景
 	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
@@ -605,11 +663,8 @@ PaintProc PROC USES ecx eax ebx esi,
 			jne L1
 
 			.IF statusFlag == 3  ; 如果暂停
-				INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
-				mov tempFont, eax
-				INVOKE SelectObject,hdcMempage, eax
+				INVOKE SelectObject,hdcMempage, font_40
 				INVOKE TextOutA,hdcMempage,0,220,offset pauseText,31  ; 绘制暂停中提示
-				INVOKE DeleteObject, tempFont
 			.ENDIF
 
 
