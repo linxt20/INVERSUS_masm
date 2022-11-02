@@ -131,10 +131,24 @@ WinProc PROC,
 			cmp eax,32  ;识别空格键
 			jne @nspace1
 			mov SpaceKeyHold,1
+			.IF WhichMenu == 2
+			mov eax,attack_black
+			mul SpaceKeyHold
+			mov SpaceKeyHold,eax
+			mov eax,0
+			mov attack_black,eax
+			.ENDIF
 		@nspace1:
 			cmp eax,13  ;识别enter键
 			jne @nenter1
 			mov EnterKeyHold,1
+			.IF WhichMenu == 2
+			mov eax,attack_white
+			mul EnterKeyHold
+			mov EnterKeyHold,eax
+			mov eax,0
+			mov attack_white,eax
+			.ENDIF
 		@nenter1:
 			cmp eax,27 ;识别esc键
 			jne @nescape1
@@ -182,10 +196,14 @@ WinProc PROC,
 		@nright2:
 			cmp eax,32   ;识别空格键
 			jne @nspace2
+			mov eax,1
+			mov attack_black,eax
 			mov SpaceKeyHold,0
 		@nspace2:
 			cmp eax,13    ;识别enter键
 			jne @nenter2
+			mov eax,1
+			mov attack_white,eax
 			mov EnterKeyHold,0
 		@nenter2:
 			cmp eax,65    ;识别a键
@@ -1398,7 +1416,9 @@ L2:
 	.ENDIF
 	mov ax,WORD PTR [edx+2]
 	mov bx,WORD PTR [edx]
+	push edx
 	call calCoordinate
+	pop edx
 	.IF ax == bulletPosition  ;子弹颜色不等且位置相同，对冲抵消
 		mov WORD PTR [edx+4],0
 		mov SWORD PTR [edx+2],-1

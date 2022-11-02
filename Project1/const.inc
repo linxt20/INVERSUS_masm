@@ -246,6 +246,8 @@ currentBullet			WORD 0
 
 ; 状态变量
 statusFlag				WORD 0 ;状态flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利，3代表暂停
+attack_black            DWORD 1 ;
+attack_white            DWORD 1;
 
 ; 按键是否按下的指示变量
 UpKeyHold				DWORD 0 
