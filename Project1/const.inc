@@ -67,6 +67,9 @@ TextOutA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 CreateFontA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ; 运行windows命令函数
 ShellExecuteA			PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
+; 播放音频文件函数
+PlaySound				PROTO STDCALL :DWORD,:DWORD,:DWORD
+
 
 ; 自定义函数声明区域
 PaintProc				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD
@@ -131,6 +134,8 @@ IDR_HELP_PATH			BYTE	"..\Project1\image\help.jpg",0       ; 控制帮助图片�
 IDR_MAP1_PATH			BYTE	"..\Project1\image\1.jpg",0          ; 地图1图片路径
 IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径
 IDR_MAP3_PATH			BYTE	"..\Project1\image\3.jpg",0          ; 地图3图片路径
+
+shoot_Mp3_PATH			BYTE	"..\Project1\mp3\shoot.wav"          ; 射击音频文件路径
 
 
 ; 结构变量定义区域

@@ -18,6 +18,8 @@ include msvcrt.inc
 includelib msvcrt.lib
 include shell32.inc
 includelib shell32.lib
+include	 winmm.inc
+includelib  winmm.lib
 
 ; 自定义库
 include const.inc
@@ -155,9 +157,7 @@ WinProc PROC,
 			mov WKeyHold,1
 		@nw1:
 			.IF WhichMenu != 2
-				push edx
 				call chooseMenu
-				pop edx
 			.ENDIF
 			jmp WinProcExit
 
@@ -756,7 +756,7 @@ ErrorHandler PROC
 	ret
 ErrorHandler ENDP
 
-DrawBasicPic PROC
+DrawBasicPic PROC USES ebx
 	; 布局页面的句柄以及其显示的句柄创建设置
 	invoke CreateCompatibleDC,hdc
 	mov hdcMempage,eax
@@ -840,7 +840,7 @@ L1:
 	ret
 DrawBasicPic ENDP
 
-PaintProc PROC USES ecx eax ebx esi,
+PaintProc PROC USES ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
@@ -1089,7 +1089,7 @@ PaintProc PROC USES ecx eax ebx esi,
 	ret
 PaintProc ENDP
 
-TimerPROC PROC
+TimerPROC PROC USES ebx
 
 	.IF WhichMenu == 2   ;游戏界面
 		.IF statusFlag == 0
@@ -1288,7 +1288,7 @@ TimerPROC PROC
 TimerPROC ENDP
 
 ;--------------------------------------------------------------
-calCoordinate PROC USES edx
+calCoordinate PROC
 ;用于计算黑白角色在地图中的位置，便于判断是否是合法移动
 ;也可以用来计算子弹所处的位置，用于碰撞判断
 ;参数：ax：需要计算的物体的纵坐标，bx：横坐标
@@ -1332,12 +1332,13 @@ emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
 		mov currentBullet,0
 	.ENDIF
 
+	INVOKE PlaySound,offset shoot_Mp3_PATH,0,SND_ASYNC
 	ret
 emitBullet ENDP
 
-updateBullets PROC
+updateBullets PROC USES ebx esi
 	LOCAL bulletPosition:WORD
-
+	
 	mov ecx,10
 L1:
 	mov esi,offset bullets
@@ -1431,7 +1432,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,2
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[whiteblock+2]   ;检测白方的左下角是否在变色路径上
@@ -1440,7 +1443,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,2
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[whiteblock+2]   ;检测白方的右上角是否在变色路径上
@@ -1449,7 +1454,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,2
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[whiteblock+2]   ;检测白方的右下角是否在变色路径上
@@ -1459,7 +1466,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,2
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 
@@ -1471,7 +1480,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,1
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[blackblock+2]   ;检测黑方的左下角是否在变色路径上
@@ -1480,7 +1491,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,1
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[blackblock+2]   ;检测白方的右上角是否在变色路径上
@@ -1489,7 +1502,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,1
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 
 			mov ax,[blackblock+2]   ;检测白方的右下角是否在变色路径上
@@ -1499,7 +1514,9 @@ LoopExit:
 			call calCoordinate
 			.IF ax == bulletPosition
 				mov ax,1
+				push ecx
 				call someOneDead
+				pop ecx
 			.ENDIF
 		.ENDIF
 	.ENDIF
@@ -1512,7 +1529,7 @@ LoopExit:
 updateBullets ENDP
 
 ;------------------------------------
-someOneDead PROC USES ecx edx
+someOneDead PROC
 ;输入参数：ax，指被击中方的color(1/2)
 ;------------------------------------
 	
