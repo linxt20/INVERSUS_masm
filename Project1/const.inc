@@ -144,7 +144,7 @@ IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径
 IDR_MAP3_PATH			BYTE	"..\Project1\image\3.jpg",0          ; 地图3图片路径
 
 ; 音频文件路径
-shoot_Mp3_PATH			BYTE	"..\Project1\mp3\shoot.wav"          ; 射击音频文件路径
+shoot_Mp3_PATH			BYTE	"..\Project1\audio\shoot.wav",0      ; 射击音频文件路径
 
 
 ; 结构变量定义区域
