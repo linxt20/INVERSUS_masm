@@ -269,6 +269,25 @@ WinProc PROC,
 		; 关闭信息接受
 		INVOKE PostQuitMessage,0
 
+		INVOKE DeleteObject,font_50
+		INVOKE DeleteObject,font_40
+		INVOKE DeleteObject,font_20
+
+		INVOKE DeleteObject,hdcMempage
+
+		mov ecx,20
+	L1:
+		push ecx
+		INVOKE DeleteObject,[hdcMemColors+ecx*4-4]
+		pop ecx
+		loop L1
+
+		INVOKE DeleteObject,hdcMemhelp
+
+		INVOKE DeleteObject,hdcMemMap1
+		INVOKE DeleteObject,hdcMemMap2
+		INVOKE DeleteObject,hdcMemMap3
+
 		; 关闭定时器
 		invoke KillTimer,hWnd,1
 		jmp WinProcExit
@@ -861,7 +880,7 @@ DrawBasicPic ENDP
 PaintProc PROC USES ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
 	local bulletheight:word,bulletwidth:word
-	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
+	invoke BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
 	; 设置字体

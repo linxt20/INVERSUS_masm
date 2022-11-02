@@ -126,11 +126,6 @@ helptext_hang11_5		byte	"->",0   ; 2
 helptext_hang11_6		byte	"shoot by",0  ; 8
 helptext_hang11_7		byte	"enter",0  ;5
 
-
-IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0      ; 黑色块路径
-IDB_PNG2_PATH			BYTE	"..\Project1\image\white.jpg",0      ; 白色块路径
-IDR_BG1_PATH			BYTE	"..\Project1\image\background.jpg",0 ; 背景块路径
-IDR_HELP_PATH			BYTE	"..\Project1\image\help.jpg",0       ; 控制帮助图片路径
 IDR_MAP1_PATH			BYTE	"..\Project1\image\1.jpg",0          ; 地图1图片路径
 IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径
 IDR_MAP3_PATH			BYTE	"..\Project1\image\3.jpg",0          ; 地图3图片路径
@@ -179,7 +174,7 @@ white_initpos			WORD 452,292
 ; 颜色变量
 Colors					DWORD 00000000h,00FFFFFFh,00CCA700h,00FF0000h,0000FF00h
 						DWORD 00FF00FFh,0000FFFFh,00FFFF00h,000000FFh,009900FFh
-						DWORD 00674EA7h,0000FFE6h,00FF00F2h,008E7CC3h,00D1EEEEh
+						DWORD 00674EA7h,00777777h,00777700h,008E7CC3h,00D1EEEEh
 						DWORD 008E388Eh,00D9D9D9h,007F6000h,00274E13h,00EAD1DCh
 
 ; 字体变量
