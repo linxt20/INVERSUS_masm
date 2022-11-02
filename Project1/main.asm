@@ -33,7 +33,7 @@ WinMain PROC
 		mov MainWin.hInstance, eax
 
 	; Load the program's icon and cursor.
-		INVOKE LoadIcon, NULL, IDI_APPLICATION
+		INVOKE LoadIcon, hInstance, 115
 		mov MainWin.hIcon, eax
 		INVOKE LoadCursor, NULL, IDC_ARROW
 		mov MainWin.hCursor, eax
