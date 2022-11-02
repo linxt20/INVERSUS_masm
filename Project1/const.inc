@@ -125,6 +125,15 @@ helptext_hang11_4		byte	"<-",0   ;  2
 helptext_hang11_5		byte	"->",0   ; 2
 helptext_hang11_6		byte	"shoot by",0  ; 8
 helptext_hang11_7		byte	"enter",0  ;5
+helptext_hang12_1       byte     "In custom menu,selcet background by",0 ;35
+helptext_hang12_2		byte	"I",0    ; 1
+helptext_hang12_3		byte	"J",0  ; 1
+helptext_hang12_4		byte	"K",0   ;  1
+helptext_hang12_5		byte	"L",0   ; 1
+helptext_hang12_6       byte    "Select p1,p2",0 ;18
+helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0  ; 53
+helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
+ 
 
 IDR_MAP1_PATH			BYTE	"..\Project1\image\1.jpg",0          ; 地图1图片路径
 IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径

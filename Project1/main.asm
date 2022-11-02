@@ -831,48 +831,60 @@ L1:
 
 	invoke CreateSolidBrush, 02BA245h
 	invoke SelectObject, hdcMemhelp, eax
-	INVOKE Rectangle,hdcMemhelp,331,280,360,310  ; w
-	INVOKE Rectangle,hdcMemhelp,300,310,330,340  ; a
-	INVOKE Rectangle,hdcMemhelp,331,310,360,340  ; s
-	INVOKE Rectangle,hdcMemhelp,361,310,390,340  ; d
-	INVOKE Rectangle,hdcMemhelp,485,295,555,325  ; space
-	INVOKE Rectangle,hdcMemhelp,341,340,400,370  ; 上
-	INVOKE Rectangle,hdcMemhelp,300,370,340,400  ; 下
-	INVOKE Rectangle,hdcMemhelp,341,370,400,400  ; 左
-	INVOKE Rectangle,hdcMemhelp,401,370,440,400  ; 右
-	INVOKE Rectangle,hdcMemhelp,535,355,605,385  ; enter
+	INVOKE Rectangle,hdcMemhelp,331,260,360,290  ; w
+	INVOKE Rectangle,hdcMemhelp,300,290,330,320  ; a
+	INVOKE Rectangle,hdcMemhelp,331,290,360,320  ; s
+	INVOKE Rectangle,hdcMemhelp,361,290,390,320  ; d
+	INVOKE Rectangle,hdcMemhelp,485,275,555,305  ; space
+	INVOKE Rectangle,hdcMemhelp,341,320,400,350  ; 上
+	INVOKE Rectangle,hdcMemhelp,300,350,340,380  ; 下
+	INVOKE Rectangle,hdcMemhelp,341,350,400,380  ; 左
+	INVOKE Rectangle,hdcMemhelp,401,350,440,380  ; 右
+	INVOKE Rectangle,hdcMemhelp,535,335,605,365  ; enter
+	INVOKE Rectangle,hdcMemhelp,431,380,460,410  ; I
+	INVOKE Rectangle,hdcMemhelp,400,410,430,440  ; J
+	INVOKE Rectangle,hdcMemhelp,431,410,460,440  ; K
+	INVOKE Rectangle,hdcMemhelp,461,410,490,440  ; L
 
 	INVOKE SetTextColor,hdcMemhelp,00FFFFFFh
 	INVOKE SetBkColor,hdcMemhelp,0
-	INVOKE SelectObject,hdcMemhelp, font_50
+	INVOKE SelectObject,hdcMemhelp, font_40
 	INVOKE TextOutA,hdcMemhelp,0,0,offset helptext_title1,14
-	INVOKE TextOutA,hdcMemhelp,0,230,offset helptext_title2,17
+	INVOKE TextOutA,hdcMemhelp,0,220,offset helptext_title2,17
 	INVOKE SelectObject,hdcMemhelp, font_20
-	INVOKE TextOutA,hdcMemhelp,0,50,offset helptext_hang1,53
-	INVOKE TextOutA,hdcMemhelp,0,70,offset helptext_hang2,54
-	INVOKE TextOutA,hdcMemhelp,0,90,offset helptext_hang3,55
-	INVOKE TextOutA,hdcMemhelp,0,110,offset helptext_hang4,32
-	INVOKE TextOutA,hdcMemhelp,0,130,offset helptext_hang5,55
-	INVOKE TextOutA,hdcMemhelp,0,150,offset helptext_hang6,54
-	INVOKE TextOutA,hdcMemhelp,0,170,offset helptext_hang7,52
-	INVOKE TextOutA,hdcMemhelp,0,190,offset helptext_hang8,52
-	INVOKE TextOutA,hdcMemhelp,0,210,offset helptext_hang9,18
-	INVOKE TextOutA,hdcMemhelp,0,300,offset helptext_hang10_1,27
-	INVOKE TextOutA,hdcMemhelp,390,300,offset helptext_hang10_6,8
-	INVOKE TextOutA,hdcMemhelp,0,360,offset helptext_hang11_1,27
-	INVOKE TextOutA,hdcMemhelp,440,360,offset helptext_hang11_6,8
+	INVOKE TextOutA,hdcMemhelp,0,40,offset helptext_hang1,53
+	INVOKE TextOutA,hdcMemhelp,0,60,offset helptext_hang2,54
+	INVOKE TextOutA,hdcMemhelp,0,80,offset helptext_hang3,55
+	INVOKE TextOutA,hdcMemhelp,0,100,offset helptext_hang4,32
+	INVOKE TextOutA,hdcMemhelp,0,120,offset helptext_hang5,55
+	INVOKE TextOutA,hdcMemhelp,0,140,offset helptext_hang6,54
+	INVOKE TextOutA,hdcMemhelp,0,160,offset helptext_hang7,52
+	INVOKE TextOutA,hdcMemhelp,0,180,offset helptext_hang8,52
+	INVOKE TextOutA,hdcMemhelp,0,200,offset helptext_hang9,18
+	INVOKE TextOutA,hdcMemhelp,0,280,offset helptext_hang10_1,27
+	INVOKE TextOutA,hdcMemhelp,390,280,offset helptext_hang10_6,8
+	INVOKE TextOutA,hdcMemhelp,0,340,offset helptext_hang11_1,27
+	INVOKE TextOutA,hdcMemhelp,440,340,offset helptext_hang11_6,8
+	INVOKE TextOutA,hdcMemhelp,0,400,offset helptext_hang12_1,35
+	INVOKE TextOutA,hdcMemhelp,490,400,offset helptext_hang12_6,12
+	INVOKE TextOutA,hdcMemhelp,0,440,offset helptext_hang13,53
+	INVOKE TextOutA,hdcMemhelp,0,460,offset helptext_hang14,58
 
 	INVOKE SetBkColor,hdcMemhelp,02BA245h
-	INVOKE TextOutA,hdcMemhelp,336,285,offset helptext_hang10_2,1
-	INVOKE TextOutA,hdcMemhelp,336,315,offset helptext_hang10_3,1
-	INVOKE TextOutA,hdcMemhelp,305,315,offset helptext_hang10_4,1
-	INVOKE TextOutA,hdcMemhelp,366,315,offset helptext_hang10_5,1
-	INVOKE TextOutA,hdcMemhelp,490,300,offset helptext_hang10_7,5
-	INVOKE TextOutA,hdcMemhelp,355,345,offset helptext_hang11_2,2
-	INVOKE TextOutA,hdcMemhelp,346,375,offset helptext_hang11_3,4
-	INVOKE TextOutA,hdcMemhelp,305,375,offset helptext_hang11_4,2
-	INVOKE TextOutA,hdcMemhelp,406,375,offset helptext_hang11_5,2
-	INVOKE TextOutA,hdcMemhelp,540,360,offset helptext_hang11_7,5
+	INVOKE TextOutA,hdcMemhelp,336,265,offset helptext_hang10_2,1
+	INVOKE TextOutA,hdcMemhelp,336,295,offset helptext_hang10_3,1
+	INVOKE TextOutA,hdcMemhelp,305,295,offset helptext_hang10_4,1
+	INVOKE TextOutA,hdcMemhelp,366,295,offset helptext_hang10_5,1
+	INVOKE TextOutA,hdcMemhelp,490,280,offset helptext_hang10_7,5
+	INVOKE TextOutA,hdcMemhelp,355,325,offset helptext_hang11_2,2
+	INVOKE TextOutA,hdcMemhelp,346,355,offset helptext_hang11_3,4
+	INVOKE TextOutA,hdcMemhelp,305,355,offset helptext_hang11_4,2
+	INVOKE TextOutA,hdcMemhelp,406,355,offset helptext_hang11_5,2
+	INVOKE TextOutA,hdcMemhelp,540,340,offset helptext_hang11_7,5
+	INVOKE TextOutA,hdcMemhelp,436,385,offset helptext_hang12_2,1
+	INVOKE TextOutA,hdcMemhelp,436,415,offset helptext_hang12_3,1
+	INVOKE TextOutA,hdcMemhelp,405,415,offset helptext_hang12_4,1
+	INVOKE TextOutA,hdcMemhelp,466,415,offset helptext_hang12_5,1
 
 	ret
 DrawBasicPic ENDP
