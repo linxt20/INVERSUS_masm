@@ -968,6 +968,63 @@ PaintProc PROC USES ebx esi,
 		INVOKE BitBlt, hdcMempage, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMemblack, 0, 0, SRCCOPY
 		INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
 
+		.IF [blackblock+8] >= 1
+			mov ax,[blackblock]
+			add ax,4
+			mov dx,[blackblock+2]
+			add dx,4
+			INVOKE BitBlt, hdcMempage, ax, dx,4,4, hdcMemwhite, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [blackblock+8] >= 2
+			mov ax,[blackblock]
+			add ax,4
+			mov dx,[blackblock+2]
+			add dx,15
+			INVOKE BitBlt, hdcMempage, ax, dx,4,4, hdcMemwhite, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [blackblock+8] >= 3
+			mov ax,[blackblock]
+			add ax,15
+			mov dx,[blackblock+2]
+			add dx,15
+			INVOKE BitBlt, hdcMempage, ax, dx,4,4, hdcMemwhite, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [blackblock+8] >= 4
+			mov ax,[blackblock]
+			add ax,15
+			mov dx,[blackblock+2]
+			add dx,4
+			INVOKE BitBlt, hdcMempage, ax, dx,4,4, hdcMemwhite, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [whiteblock+8] >= 1
+			mov ax,[whiteblock]
+			add ax,4
+			mov dx,[whiteblock+2]
+			add dx,4
+			INVOKE BitBlt, hdcMempage, ax, dx, 4, 4, hdcMemblack, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [whiteblock+8] >= 2
+			mov ax,[whiteblock]
+			add ax,4
+			mov dx,[whiteblock+2]
+			add dx,15
+			INVOKE BitBlt, hdcMempage, ax, dx, 4, 4, hdcMemblack, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [whiteblock+8] >= 3
+			mov ax,[whiteblock]
+			add ax,15
+			mov dx,[whiteblock+2]
+			add dx,15
+			INVOKE BitBlt, hdcMempage, ax, dx, 4, 4, hdcMemblack, 0, 0, SRCCOPY
+		.ENDIF
+		.IF [whiteblock+8] >= 4
+			mov ax,[whiteblock]
+			add ax,15
+			mov dx,[whiteblock+2]
+			add dx,4
+			INVOKE BitBlt, hdcMempage, ax, dx, 4, 4, hdcMemblack, 0, 0, SRCCOPY
+		.ENDIF
+
 			mov ecx,10
 		L1:                     ; 循环画子弹
 			push ecx
