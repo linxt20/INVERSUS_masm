@@ -131,23 +131,23 @@ WinProc PROC,
 			cmp eax,32  ;识别空格键
 			jne @nspace1
 			mov SpaceKeyHold,1
-			.IF WhichMenu == 2
-			mov eax,attack_black
-			mul SpaceKeyHold
-			mov SpaceKeyHold,eax
-			mov eax,0
-			mov attack_black,eax
+			.IF WhichMenu == 2   ;在游戏界面设置了按键判断标志，如果长按那么只会标记1次按键，保障按一次发射一个子弹
+				mov eax,attack_black  
+				mul SpaceKeyHold
+				mov SpaceKeyHold,eax
+				mov eax,0
+				mov attack_black,eax
 			.ENDIF
 		@nspace1:
 			cmp eax,13  ;识别enter键
 			jne @nenter1
 			mov EnterKeyHold,1
-			.IF WhichMenu == 2
-			mov eax,attack_white
-			mul EnterKeyHold
-			mov EnterKeyHold,eax
-			mov eax,0
-			mov attack_white,eax
+			.IF WhichMenu == 2  ;在游戏界面设置了按键判断标志，如果长按那么只会标记1次按键，保障按一次发射一个子弹
+				mov eax,attack_white
+				mul EnterKeyHold
+				mov EnterKeyHold,eax
+				mov eax,0
+				mov attack_white,eax
 			.ENDIF
 		@nenter1:
 			cmp eax,27 ;识别esc键
@@ -243,8 +243,10 @@ WinProc PROC,
 		INVOKE CreateFontA,20,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font_20, eax
 
+		; 绘制基础的黑色显示句柄、白色显示句柄、背景色显示句柄、帮助界面显示句柄
 		call DrawBasicPic
 
+		; 接下来的部分主要是显示几个提供选择的关卡图片
 		INVOKE CreateCompatibleDC, hdc
 		mov hdcMemMap1, eax
 		INVOKE CreateCompatibleDC, hdc

@@ -1,3 +1,4 @@
+; 结构变量声明区域
 ;消息结构数组
 MSGStruct STRUCT
 	msgWnd				DWORD ?
@@ -16,9 +17,7 @@ BULLET STRUCT
 	heading				WORD  ? ;子弹的朝向，1代表上，2代表下，3代表左，4代表右
 BULLET ENDS
 
-
 ; 特有变量声明区域
-
 ; 窗口长宽
 WINDOW_WIDTH			EQU		640
 WINDOW_HEIGHT			EQU		480
@@ -100,8 +99,9 @@ bgChooseText			BYTE	"background",0			; 背景选择标签
 p1ChooseText			BYTE	"    p1    ",0			; p1选择标签
 p2ChooseText			BYTE	"    p2    ",0			; p2选择标签
 
-helptext_title1			byte	"game rule show",0
-helptext_title2			byte	"game control show",0
+; 以下部分为帮助文档的内容，采用文字显示和笔刷绘画，能够提供较大的自定义属性
+helptext_title1			byte	"game rule show",0  ; 14
+
 helptext_hang1			byte	"INVERSUS is a shooting game, in the game, you need to",0  ; 53
 helptext_hang2			byte	"play for one of the black and white, and compared with",0  ;54
 helptext_hang3			byte	"the other party. The victory of the game goal is simple",0   ;55
@@ -111,11 +111,13 @@ helptext_hang6			byte	"white two colors, you can only move in the area of the",0
 helptext_hang7			byte	"contrary to their own color, you can shoot to change",0  ;52
 helptext_hang8			byte	"the path of regional color so that you can make your",0       ;52
 helptext_hang9			byte	"role in this area.",0   ;18
+
+helptext_title2			byte	"game control show",0  ;17
 helptext_hang10_1		byte	"play 1: black block move by",0  ;27
-helptext_hang10_2		byte	"w",0
-helptext_hang10_3		byte	"s",0
-helptext_hang10_4		byte	"a",0
-helptext_hang10_5		byte	"d",0
+helptext_hang10_2		byte	"w",0 ;1
+helptext_hang10_3		byte	"s",0 ;1
+helptext_hang10_4		byte	"a",0  ;1
+helptext_hang10_5		byte	"d",0  ;1
 helptext_hang10_6		byte	"shoot by",0  ; 8
 helptext_hang10_7		byte	"space",0  ;5
 helptext_hang11_1		byte	"play 2: white block move by",0  ;27
@@ -132,13 +134,16 @@ helptext_hang12_4		byte	"K",0   ;  1
 helptext_hang12_5		byte	"L",0   ; 1
 helptext_hang12_6       byte    "Select p1,p2",0 ;18
 helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0  ; 53
-helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
- 
 
+helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
+
+; 图片文件路径
+; 选关界面地图，纯画会比较复杂，于是直接显示图片
 IDR_MAP1_PATH			BYTE	"..\Project1\image\1.jpg",0          ; 地图1图片路径
 IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径
 IDR_MAP3_PATH			BYTE	"..\Project1\image\3.jpg",0          ; 地图3图片路径
 
+; 音频文件路径
 shoot_Mp3_PATH			BYTE	"..\Project1\mp3\shoot.wav"          ; 射击音频文件路径
 
 
@@ -166,7 +171,7 @@ hdcMemMap3				DWORD ? ; 地图3图片显示句柄
 hdcMemColors			DWORD 20 DUP(?) ; 20种颜色显示句柄
 
 ; 菜单选项变量
-WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义界面
+WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义主题色界面
 SelectMenu				SDWORD 0 ; 正在选择的菜单项 0表示第一项
 SelectMenu2				SDWORD 0 ; 用来在自定义界面给p2提供光标移动选择
 SelectMenu3				SDWORD 0 ; 用来在自定义界面对背景进行选择
@@ -180,7 +185,7 @@ whiteblock				WORD 452,292,23,1,4,0
 black_initpos			WORD 164,164
 white_initpos			WORD 452,292
 
-; 颜色变量
+; 颜色变量，用于自定义主题页面
 Colors					DWORD 00000000h,00FFFFFFh,00CCA700h,00FF0000h,0000FF00h
 						DWORD 00FF00FFh,0000FFFFh,00FFFF00h,000000FFh,009900FFh
 						DWORD 00674EA7h,00777777h,00777700h,008E7CC3h,00D1EEEEh
@@ -244,14 +249,14 @@ roundthree_map			WORD 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 map						WORD 300 DUP(?)
 
 ;子弹数组，储存地图中的每颗子弹，在计时器中令所有子弹向指定方向移动一段距离
-bullets					BULLET 10 DUP(< -1,-1,0,0 >)  
+bullets					BULLET 10 DUP(< -1,-1,0,0 >)  ; 这一部分参考其结构，前两个位为位置，第三个位是颜色，第四个位是方向
 ;假定地图中同时最多有10颗子弹，采取队列的思想，每次从currentBullet插入，并令currentBullets加一（并模10）
 currentBullet			WORD 0
 
 ; 状态变量
 statusFlag				WORD 0 ;状态flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利，3代表暂停
-attack_black            DWORD 1 ;
-attack_white            DWORD 1;
+attack_black            DWORD 1 ;space正在按下则设置为0，与space的状态位相乘，使其保持为0，这样就能实现按一次只发射一次子弹
+attack_white            DWORD 1 ;同上理
 
 ; 按键是否按下的指示变量
 UpKeyHold				DWORD 0 

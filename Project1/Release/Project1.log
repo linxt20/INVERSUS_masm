@@ -1,8 +1,8 @@
-﻿生成启动时间为 2022/11/2 20:49:02。
+﻿生成启动时间为 2022/11/3 1:03:32。
      1>项目“D:\masmbighomework\-INVERSUS_masm\Project1\Project1.vcxproj”在节点 2 上(Build 个目标)。
      1>_MASM:
          Assembling main.asm...
-         cmd.exe /C "C:\Users\lxt13\AppData\Local\Temp\tmpda223446031844d3b28f96f21518c67b.cmd"
+         cmd.exe /C "C:\Users\lxt13\AppData\Local\Temp\tmpb2690ef110344e05a718e6ec96adc2c7.cmd"
          ml.exe /c /nologo /Zi /Fo"Release\main.obj" /W3 /errorReport:prompt  /Tamain.asm
      1>main.asm(8): fatal error A1000: cannot open file : windows.inc
      1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\BuildCustomizations\masm.targets(49,5): error MSB3721: 命令“ml.exe /c /nologo /Zi /Fo"Release\main.obj" /W3 /errorReport:prompt  /Tamain.asm”已退出，返回代码为 1。
@@ -10,4 +10,4 @@
 
 生成失败。
 
-已用时间 00:00:00.22
+已用时间 00:00:01.17
