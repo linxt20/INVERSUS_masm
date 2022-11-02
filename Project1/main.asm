@@ -155,7 +155,9 @@ WinProc PROC,
 			mov WKeyHold,1
 		@nw1:
 			.IF WhichMenu != 2
+				push edx
 				call chooseMenu
+				pop edx
 			.ENDIF
 			jmp WinProcExit
 
@@ -340,7 +342,7 @@ chooseMenu PROC  ; 选择菜单函数
 			.ENDIF
 		.ENDIF
 		.IF eax == 40 || eax == 83  ; 识别向下按键和s
-			.IF SelectMenu < 2
+			.IF SelectMenu < 3
 				inc SelectMenu
 				ret
 			.ENDIF
@@ -352,6 +354,12 @@ chooseMenu PROC  ; 选择菜单函数
 			.ELSEIF SelectMenu == 1
 				;INVOKE ShellExecuteA, 
 				mov WhichMenu,4
+				ret
+			.ELSEIF SelectMenu == 2
+				mov WhichMenu,6
+				mov SelectMenu,0
+				mov SelectMenu2,1
+				mov SelectMenu3,2
 				ret
 			.ELSE
 				INVOKE ExitProcess,0
@@ -415,6 +423,310 @@ chooseMenu PROC  ; 选择菜单函数
 			mov SelectMenu,0
 			ret
 		.ENDIF
+	.ELSEIF WhichMenu == 6   ;自定义界面
+
+		; 控制p1选择光标
+		.IF eax == 87   ; 识别w按键
+			sub SelectMenu,5
+			mov edx,SelectMenu
+			.IF edx == SelectMenu2 || edx == SelectMenu3
+				sub SelectMenu,5
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					sub SelectMenu,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu < 0
+				add SelectMenu,20
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					sub SelectMenu,5
+					mov edx,SelectMenu
+					.IF edx == SelectMenu2 || edx == SelectMenu3
+						sub SelectMenu,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 83  ; 识别s按键
+			add SelectMenu,5
+			mov edx,SelectMenu
+			.IF edx == SelectMenu2 || edx == SelectMenu3
+				add SelectMenu,5
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					add SelectMenu,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu > 19
+				sub SelectMenu,20
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					add SelectMenu,5
+					mov edx,SelectMenu
+					.IF edx == SelectMenu2 || edx == SelectMenu3
+						add SelectMenu,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 65   ; 识别a按键
+			sub SelectMenu,1
+			mov edx,SelectMenu
+			.IF edx == SelectMenu2 || edx == SelectMenu3
+				sub SelectMenu,1
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					sub SelectMenu,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu == -1 || SelectMenu == 4 || SelectMenu == 9 || SelectMenu == 14
+				add SelectMenu,5
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					sub SelectMenu,1
+					mov edx,SelectMenu
+					.IF edx == SelectMenu2 || edx == SelectMenu3
+						sub SelectMenu,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 68  ; 识别d按键
+			add SelectMenu,1
+			mov edx,SelectMenu
+			.IF edx == SelectMenu2 || edx == SelectMenu3
+				add SelectMenu,1
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					add SelectMenu,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu == 5 || SelectMenu == 10 || SelectMenu == 15 || SelectMenu == 20
+				sub SelectMenu,5
+				mov edx,SelectMenu
+				.IF edx == SelectMenu2 || edx == SelectMenu3
+					add SelectMenu,1
+					mov edx,SelectMenu
+					.IF edx == SelectMenu2 || edx == SelectMenu3
+						add SelectMenu,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+
+		; 控制p2选择光标
+		.IF eax == 38   ; 识别向上按键
+			sub SelectMenu2,5
+			mov edx,SelectMenu2
+			.IF edx == SelectMenu || edx == SelectMenu3
+				sub SelectMenu2,5
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					sub SelectMenu2,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu2 < 0
+				add SelectMenu2,20
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					sub SelectMenu2,5
+					mov edx,SelectMenu2
+					.IF edx == SelectMenu || edx == SelectMenu3
+						sub SelectMenu2,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 40  ; 识别向下按键
+			add SelectMenu2,5
+			mov edx,SelectMenu2
+			.IF edx == SelectMenu || edx == SelectMenu3
+				add SelectMenu2,5
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					add SelectMenu2,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu2 > 19
+				sub SelectMenu2,20
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					add SelectMenu2,5
+					mov edx,SelectMenu2
+					.IF edx == SelectMenu || edx == SelectMenu3
+						add SelectMenu2,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 37   ; 识别向左按键
+			sub SelectMenu2,1
+			mov edx,SelectMenu2
+			.IF edx == SelectMenu || edx == SelectMenu3
+				sub SelectMenu2,1
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					sub SelectMenu2,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu2 == -1 || SelectMenu2 == 4 || SelectMenu2 == 9 || SelectMenu2 == 14
+				add SelectMenu2,5
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					sub SelectMenu2,1
+					mov edx,SelectMenu2
+					.IF edx == SelectMenu || edx == SelectMenu3
+						sub SelectMenu2,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 39  ; 识别向右按键
+			add SelectMenu2,1
+			mov edx,SelectMenu2
+			.IF edx == SelectMenu || edx == SelectMenu3
+				add SelectMenu2,1
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					add SelectMenu2,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu2 == 5 || SelectMenu2 == 10 || SelectMenu2 == 15 || SelectMenu2 == 20
+				sub SelectMenu2,5
+				mov edx,SelectMenu2
+				.IF edx == SelectMenu || edx == SelectMenu3
+					add SelectMenu2,1
+					mov edx,SelectMenu2
+					.IF edx == SelectMenu || edx == SelectMenu3
+						add SelectMenu2,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+
+		; 控制背景选择光标
+		.IF eax == 73   ; 识别i按键
+			sub SelectMenu3,5
+			mov edx,SelectMenu3
+			.IF edx == SelectMenu || edx == SelectMenu2
+				sub SelectMenu3,5
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					sub SelectMenu3,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu3 < 0
+				add SelectMenu3,20
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					sub SelectMenu3,5
+					mov edx,SelectMenu3
+					.IF edx == SelectMenu || edx == SelectMenu2
+						sub SelectMenu3,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 75  ; 识别k按键
+			add SelectMenu3,5
+			mov edx,SelectMenu3
+			.IF edx == SelectMenu || edx == SelectMenu2
+				add SelectMenu3,5
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					add SelectMenu3,5
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu3 > 19
+				sub SelectMenu3,20
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					add SelectMenu3,5
+					mov edx,SelectMenu3
+					.IF edx == SelectMenu || edx == SelectMenu2
+						add SelectMenu3,5
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 74   ; 识别j按键
+			sub SelectMenu3,1
+			mov edx,SelectMenu3
+			.IF edx == SelectMenu || edx == SelectMenu2
+				sub SelectMenu3,1
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					sub SelectMenu3,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu3 == -1 || SelectMenu3 == 4 || SelectMenu3 == 9 || SelectMenu3 == 14
+				add SelectMenu3,5
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					sub SelectMenu3,1
+					mov edx,SelectMenu3
+					.IF edx == SelectMenu || edx == SelectMenu2
+						sub SelectMenu3,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+		.IF eax == 76  ; 识别l按键
+			add SelectMenu3,1
+			mov edx,SelectMenu3
+			.IF edx == SelectMenu || edx == SelectMenu2
+				add SelectMenu3,1
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					add SelectMenu3,1
+				.ENDIF
+			.ENDIF
+			.IF SelectMenu3 == 5 || SelectMenu3 == 10 || SelectMenu3 == 15 || SelectMenu3 == 20
+				sub SelectMenu3,5
+				mov edx,SelectMenu3
+				.IF edx == SelectMenu || edx == SelectMenu2
+					add SelectMenu3,1
+					mov edx,SelectMenu3
+					.IF edx == SelectMenu || edx == SelectMenu2
+						add SelectMenu3,1
+					.ENDIF
+				.ENDIF
+			.ENDIF
+			ret
+		.ENDIF
+
+		; 确认
+		.IF eax == 13 || eax == 32  ; 确认键为enter和space
+			mov EnterKeyHold,0
+			mov SpaceKeyHold,0
+			mov WhichMenu,0
+
+			; 将不同颜色的句柄直接赋给三个显示用的hdcMem
+			mov edx, SelectMenu
+			mov eax, [hdcMemColors+edx*4]
+			mov hdcMemblack, eax
+			mov edx, SelectMenu2
+			mov eax, [hdcMemColors+edx*4]
+			mov hdcMemwhite, eax
+			mov edx, SelectMenu3
+			mov eax, [hdcMemColors+edx*4]
+			mov hdcMembg, eax
+
+			mov SelectMenu,0
+			ret
+		.ENDIF
 	.ENDIF
 	ret
 chooseMenu ENDP
@@ -451,32 +763,28 @@ DrawBasicPic PROC
 	invoke CreateCompatibleBitmap,hdc,WINDOW_WIDTH,WINDOW_HEIGHT
 	invoke SelectObject,hdcMempage,eax
 	
-	; 绘制黑色并存在hdcmemblack
+	; 绘制20种颜色并存在hdcMemColors
+	mov ecx,20
+L1:
+	push ecx
+	mov ebx,ecx
 	INVOKE CreateCompatibleDC, hdc
-	mov hdcMemblack, eax
+	mov [hdcMemColors+ebx*4-4], eax
 	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-	invoke SelectObject,hdcMemblack,eax
-	invoke CreateSolidBrush, 0000000h
-	invoke SelectObject, hdcMemblack, eax
-	INVOKE Rectangle,hdcMemblack,-1,-1,1000,1000
+	invoke SelectObject,[hdcMemColors+ebx*4-4],eax
+	invoke CreateSolidBrush, [Colors+ebx*4-4]
+	invoke SelectObject, [hdcMemColors+ebx*4-4], eax
+	INVOKE Rectangle,[hdcMemColors+ebx*4-4],-1,-1,1000,1000
+	pop ecx
+	loop L1
 
-	; 绘制白色并存在hdcmemwhite
-	INVOKE CreateCompatibleDC, hdc
+	; 将不同颜色的句柄直接赋给三个显示用的hdcMem
+	mov eax, [hdcMemColors]
+	mov hdcMemblack, eax
+	mov eax, [hdcMemColors+4]
 	mov hdcMemwhite, eax
-	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-	invoke SelectObject,hdcMemwhite,eax
-	invoke CreateSolidBrush, 0ffffffh
-	invoke SelectObject, hdcMemwhite, eax
-	INVOKE Rectangle,hdcMemwhite,-1,-1,1000,1000
-	
-	; 绘制背景颜色并存在hdcmembg
-	INVOKE CreateCompatibleDC, hdc
+	mov eax, [hdcMemColors+8]
 	mov hdcMembg, eax
-	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
-	invoke SelectObject,hdcMembg,eax
-	invoke CreateSolidBrush, 0cca700h
-	invoke SelectObject, hdcMembg, eax
-	INVOKE Rectangle,hdcMembg,-1,-1,1000,1000
 	
 	; 绘制帮助文档并存在hdcmemhelp
 	INVOKE CreateCompatibleDC, hdc
@@ -538,35 +846,38 @@ PaintProc PROC USES ecx eax ebx esi,
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
-	; 创建并设置字体
+	; 设置字体
 	INVOKE SelectObject,hdcMempage, font_50
 
 	; 画上黑色背景
-	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,hdcMemblack,0,0,SRCCOPY
+	invoke BitBlt,hdcMempage,0,0,WINDOW_WIDTH,WINDOW_HEIGHT,[hdcMemColors],0,0,SRCCOPY
 	
 	; 设置布局页面的背景颜色和字的颜色
 	INVOKE SetTextColor,hdcMempage,00FFFFFFh
 	INVOKE SetBkColor,hdcMempage,0
 
 	.IF WhichMenu == 0 ;开始界面
-		INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
-		INVOKE TextOutA,hdcMempage,266,288,offset helpText,4  ;640/2-54=266
-		INVOKE TextOutA,hdcMempage,267,368,offset exitText,4  ;640/2-53=267
+		INVOKE TextOutA,hdcMempage,253,188,offset startText,5  ;640/2-67=253
+		INVOKE TextOutA,hdcMempage,266,248,offset helpText,4   ;640/2-54=266
+		INVOKE TextOutA,hdcMempage,240,308,offset customText,6 ;640/2-80=240
+		INVOKE TextOutA,hdcMempage,267,368,offset exitText,4   ;640/2-53=267
 
 		INVOKE SetTextColor,hdcMempage,0
 		INVOKE SetBkColor,hdcMempage,00FFFFFFh
 		; 给选中的菜单设置相反的背景与字色
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdcMempage,253,188,offset startText,5  ;640/2-67=253
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdcMempage,266,288,offset helpText,4  ;640/2-54=266
+			INVOKE TextOutA,hdcMempage,266,248,offset helpText,4   ;640/2-54=266
 		.ELSEIF SelectMenu == 2
-			INVOKE TextOutA,hdcMempage,267,368,offset exitText,4  ;640/2-53=267
+			INVOKE TextOutA,hdcMempage,240,308,offset customText,6 ;640/2-80=240
+		.ELSEIF SelectMenu == 3
+			INVOKE TextOutA,hdcMempage,267,368,offset exitText,4   ;640/2-53=267
 		.ENDIF
 
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
 
-		INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5  ;640/2-69=251
+		INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5   ;640/2-69=251
 		INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240	
 
 		INVOKE SetTextColor,hdcMempage,0
@@ -581,7 +892,7 @@ PaintProc PROC USES ecx eax ebx esi,
 	.ELSEIF WhichMenu == 2                    ;游戏界面
 		
 		; 把背景图绘制在布局页面上
-		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMembg, 0, 0, SRCCOPY  ; 这里借用了黑格的hdcmem用来显示背景（但没有影响）
+		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMembg, 0, 0, SRCCOPY
 
 		; 这部分两层循环实现根据地图块上的数字实现给布局页面对应位置画上不同的色块
 		mov	esi, offset map
@@ -654,9 +965,9 @@ PaintProc PROC USES ecx eax ebx esi,
 			mov dx,[esi+2]
 			sub dx,10
 			.IF ax == 1  
-			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemblack, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, bx, dx, 20, 20, hdcMemblack, 0, 0, SRCCOPY
 			.ELSEIF ax==2
-			INVOKE BitBlt, hdcMempage, bx , dx , 20, 20, hdcMemwhite, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, bx, dx, 20, 20, hdcMemwhite, 0, 0, SRCCOPY
 			.ENDIF
 			pop ecx
 			dec ecx
@@ -670,9 +981,9 @@ PaintProc PROC USES ecx eax ebx esi,
 
 	.ELSEIF WhichMenu == 3   ;结束界面
 		.IF statusFlag == 1
-			INVOKE TextOutA,hdcMempage,200,170,offset blackWinMsg,9  ; 绘制黑方胜利结束页面语言
+			INVOKE TextOutA,hdcMempage,200,170,offset P1WinMsg,6  ; 绘制P1胜利结束页面语言
 		.ELSE 
-			INVOKE TextOutA,hdcMempage,200,170,offset whiteWinMsg,9 ; 绘制白方胜利结束页面语言
+			INVOKE TextOutA,hdcMempage,200,170,offset P2WinMsg,6 ; 绘制P2胜利结束页面语言
 		.ENDIF
 		INVOKE TextOutA,hdcMempage,60,320,offset endbacktip,19  ; press r to comeback
 
@@ -692,6 +1003,83 @@ PaintProc PROC USES ecx eax ebx esi,
 		.ELSEIF SelectMenu == 2
 			INVOKE TextOutA,hdcMempage,170,360,offset arrowText,2
 		.ENDIF
+	.ELSEIF WhichMenu == 6
+		; 画20种颜色。太懒不想写循环。两重循环的码量不一定比20行少。
+		INVOKE BitBlt, hdcMempage, 40, 20, 80, 80, [hdcMemColors], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 160, 20, 80, 80, [hdcMemColors+4], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 280, 20, 80, 80, [hdcMemColors+8], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 400, 20, 80, 80, [hdcMemColors+12], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 520, 20, 80, 80, [hdcMemColors+16], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 40, 140, 80, 80, [hdcMemColors+20], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 160, 140, 80, 80, [hdcMemColors+24], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 280, 140, 80, 80, [hdcMemColors+28], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 400, 140, 80, 80, [hdcMemColors+32], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 520, 140, 80, 80, [hdcMemColors+36], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 40, 260, 80, 80, [hdcMemColors+40], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 160, 260, 80, 80, [hdcMemColors+44], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 280, 260, 80, 80, [hdcMemColors+48], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 400, 260, 80, 80, [hdcMemColors+52], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 520, 260, 80, 80, [hdcMemColors+56], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 40, 380, 80, 80, [hdcMemColors+60], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 160, 380, 80, 80, [hdcMemColors+64], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 280, 380, 80, 80, [hdcMemColors+68], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 400, 380, 80, 80, [hdcMemColors+72], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 520, 380, 80, 80, [hdcMemColors+76], 0, 0, SRCCOPY
+
+		; 为避免第一种颜色（黑色）与背景融为一体，将其周围画白框
+		INVOKE BitBlt, hdcMempage, 40, 20, 80, 1, [hdcMemColors+4], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 40, 20, 1, 80, [hdcMemColors+4], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 120, 20, 1, 80, [hdcMemColors+4], 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 40, 100, 80, 1, [hdcMemColors+4], 0, 0, SRCCOPY
+
+		INVOKE SelectObject,hdcMempage, font_20
+		; 绘制p1选择光标
+		mov eax, SelectMenu
+		mov bx, 5
+		div bx
+		mov bl, 120
+		mul bl
+		add ax, 50
+		push eax
+
+		mov ax,dx
+		mul bl
+		add ax, 20
+		pop edx
+
+		INVOKE TextOutA,hdcMempage,eax,edx,offset p1ChooseText,10
+
+		; 绘制p2选择光标
+		mov eax, SelectMenu2
+		mov bx, 5
+		div bx
+		mov bl, 120
+		mul bl
+		add ax, 50
+		push eax
+
+		mov ax,dx
+		mul bl
+		add ax, 20
+		pop edx
+
+		INVOKE TextOutA,hdcMempage,eax,edx,offset p2ChooseText,10
+
+		; 绘制背景选择光标
+		mov eax, SelectMenu3
+		mov bx, 5
+		div bx
+		mov bl, 120
+		mul bl
+		add ax, 50
+		push eax
+
+		mov ax,dx
+		mul bl
+		add ax, 20
+		pop edx
+
+		INVOKE TextOutA,hdcMempage,eax,edx,offset bgChooseText,10
 	.ENDIF
 
 	; 最后把准备好的布局页面一次画到显示窗口上

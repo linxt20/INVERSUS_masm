@@ -75,49 +75,53 @@ emitBullet				PROTO STDCALL :WORD,:WORD,:WORD,:WORD
 .data
 
 ; 字符串定义区域
-WindowName				BYTE	"INVERSUS ASM",0        ; 窗口名
-className				BYTE	"ASMWin",0              ; 窗口类名
+WindowName				BYTE	"INVERSUS ASM",0		; 窗口名
+className				BYTE	"ASMWin",0				; 窗口类名
 
-ErrorTitle				BYTE	"Error",0               ; 错误警告弹窗标题
+ErrorTitle				BYTE	"Error",0				; 错误警告弹窗标题
 
-blackWinMsg				BYTE	"Black Win",0           ; 黑方胜利提示   
-whiteWinMsg				BYTE	"White Win",0           ; 白方胜利提示   
-endbacktip				BYTE	"press r to comeback",0 ; 结束页面提示语言
+P1WinMsg				BYTE	"P1 Win",0				; P1胜利提示   
+P2WinMsg				BYTE	"P2 Win",0				; P2胜利提示   
+endbacktip				BYTE	"press r to comeback",0	; 结束页面提示语言
 
-startText				BYTE	"start",0               ; 开始游戏标签     
-helpText				BYTE	"help",0                ; 控制帮助文档标签
-exitText				BYTE	"exit",0                ; 退出游戏标签
-PVPText					BYTE	"P V P",0               ; 双人小游戏模式标签
-PVEText					BYTE	"P V E",0               ; 单机模式标签     unused
-BackText				BYTE	"<-back",0              ; 返回上一级目录标签
+startText				BYTE	"start",0				; 开始游戏标签     
+helpText				BYTE	"help",0				; 控制帮助文档标签
+customText				BYTE	"custom",0				; 个性化定义颜色标签
+exitText				BYTE	"exit",0				; 退出游戏标签
+PVPText					BYTE	"P V P",0				; 双人小游戏模式标签
+PVEText					BYTE	"P V E",0				; 单机模式标签     unused
+BackText				BYTE	"<-back",0				; 返回上一级目录标签
 arrowText				BYTE	"->",0					; 指示地图选择标签
 pauseText				BYTE	"Pausing, press Esc to continue",0   ; 暂停标签
+bgChooseText			BYTE	"background",0			; 背景选择标签
+p1ChooseText			BYTE	"    p1    ",0			; p1选择标签
+p2ChooseText			BYTE	"    p2    ",0			; p2选择标签
 
-helptext_title1                byte     "game rule show",0
-helptext_title2                byte     "game control show",0
-helptext_hang1                byte     "INVERSUS is a shooting game, in the game, you need to",0  ; 53
-helptext_hang2                byte     "play for one of the black and white, and compared with",0  ;54
-helptext_hang3                byte     "the other party. The victory of the game goal is simple",0   ;55
-helptext_hang4               byte     "which is only to hit each other.",0     ;32
-helptext_hang5               byte      "Please note that the map is also divided into black and",0    ;55
-helptext_hang6               byte      "white two colors, you can only move in the area of the",0  ;54
-helptext_hang7               byte      "contrary to their own color, you can shoot to change",0  ;52
-helptext_hang8               byte      "the path of regional color so that you can make your",0       ;52
-helptext_hang9               byte      "role in this area.",0   ;18
-helptext_hang10_1              byte       "play 1: black block move by",0  ;27
-helptext_hang10_2              byte       "w",0
-helptext_hang10_3              byte       "s",0
-helptext_hang10_4              byte       "a",0
-helptext_hang10_5              byte       "d",0
-helptext_hang10_6              byte       "shoot by",0  ; 8
-helptext_hang10_7             byte        "space",0  ;5
-helptext_hang11_1              byte       "play 2: white block move by",0  ;27
-helptext_hang11_2              byte       "up",0    ; 2
-helptext_hang11_3              byte       "down",0  ; 4
-helptext_hang11_4              byte       "<-",0   ;  2
-helptext_hang11_5              byte       "->",0   ; 2
-helptext_hang11_6              byte       "shoot by",0  ; 8
-helptext_hang11_7             byte        "enter",0  ;5
+helptext_title1			byte	"game rule show",0
+helptext_title2			byte	"game control show",0
+helptext_hang1			byte	"INVERSUS is a shooting game, in the game, you need to",0  ; 53
+helptext_hang2			byte	"play for one of the black and white, and compared with",0  ;54
+helptext_hang3			byte	"the other party. The victory of the game goal is simple",0   ;55
+helptext_hang4			byte	"which is only to hit each other.",0     ;32
+helptext_hang5			byte	"Please note that the map is also divided into black and",0    ;55
+helptext_hang6			byte	"white two colors, you can only move in the area of the",0  ;54
+helptext_hang7			byte	"contrary to their own color, you can shoot to change",0  ;52
+helptext_hang8			byte	"the path of regional color so that you can make your",0       ;52
+helptext_hang9			byte	"role in this area.",0   ;18
+helptext_hang10_1		byte	"play 1: black block move by",0  ;27
+helptext_hang10_2		byte	"w",0
+helptext_hang10_3		byte	"s",0
+helptext_hang10_4		byte	"a",0
+helptext_hang10_5		byte	"d",0
+helptext_hang10_6		byte	"shoot by",0  ; 8
+helptext_hang10_7		byte	"space",0  ;5
+helptext_hang11_1		byte	"play 2: white block move by",0  ;27
+helptext_hang11_2		byte	"up",0    ; 2
+helptext_hang11_3		byte	"down",0  ; 4
+helptext_hang11_4		byte	"<-",0   ;  2
+helptext_hang11_5		byte	"->",0   ; 2
+helptext_hang11_6		byte	"shoot by",0  ; 8
+helptext_hang11_7		byte	"enter",0  ;5
 
 
 IDB_PNG1_PATH			BYTE	"..\Project1\image\black.jpg",0      ; 黑色块路径
@@ -150,10 +154,13 @@ hdcMemhelp				DWORD ? ; 帮助图显示句柄
 hdcMemMap1				DWORD ? ; 地图1图片显示句柄
 hdcMemMap2				DWORD ? ; 地图2图片显示句柄
 hdcMemMap3				DWORD ? ; 地图3图片显示句柄
+hdcMemColors			DWORD 20 DUP(?) ; 20种颜色显示句柄
 
 ; 菜单选项变量
-WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面
-SelectMenu				DWORD 0 ; 正在选择的菜单项 0表示第一项
+WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义界面
+SelectMenu				SDWORD 0 ; 正在选择的菜单项 0表示第一项
+SelectMenu2				SDWORD 0 ; 用来在自定义界面给p2提供光标移动选择
+SelectMenu3				SDWORD 0 ; 用来在自定义界面对背景进行选择
 
 ; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向，第五位为剩余子弹数（每人上限为4）
 ;第六位是冷却（子弹恢复）计数器，当达到100时（也即，子弹恢复时间为3秒）清零，并增加一发子弹
@@ -163,6 +170,12 @@ whiteblock				WORD 452,292,23,1,4,0
 ; 每一轮黑白块的初始位置 第一个数是横向的刻度，第二个数是纵向的刻度
 black_initpos			WORD 164,164
 white_initpos			WORD 452,292
+
+; 颜色变量
+Colors					DWORD 00000000h,00FFFFFFh,00CCA700h,00FF0000h,0000FF00h
+						DWORD 00FF00FFh,0000FFFFh,00FFFF00h,000000FFh,009900FFh
+						DWORD 00674EA7h,0000FFE6h,00FF00F2h,008E7CC3h,00D1EEEEh
+						DWORD 008E388Eh,00D9D9D9h,007F6000h,00274E13h,00EAD1DCh
 
 ; 字体变量
 font_50					DWORD ?  ; 高度为50像素的字体
