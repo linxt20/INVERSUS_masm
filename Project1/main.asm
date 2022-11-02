@@ -860,7 +860,7 @@ DrawBasicPic ENDP
 
 PaintProc PROC USES ebx esi,
 	hWnd:DWORD, localMsg:DWORD, wParam:DWORD, lParam:DWORD
-
+	local bulletheight:word,bulletwidth:word
 	invoke  BeginPaint, hWnd, addr ps ; 开始绘画
 	mov hdc, eax                    ; 绘画页面句柄
 
@@ -1034,15 +1034,31 @@ PaintProc PROC USES ebx esi,
 			sal ax,3
 			add esi,eax
 
+			mov ax,WORD PTR [esi+6]
+			.IF ax == 1 || ax == 2
+				mov bx,[esi]         ; 子弹目前是正方形，为了使其中心就是之前的子弹点，因此正方形的起始点需要是(-10,-10),目前正方形子弹的大小为20*20像素
+				sub bx,2
+				mov dx,[esi+2]
+				sub dx,10
+				mov cx,5
+				mov bulletheight,cx
+				mov cx,20
+				mov bulletwidth,cx
+			.ELSEIF ax == 3 || ax == 4
+				mov bx,[esi]         ; 子弹目前是正方形，为了使其中心就是之前的子弹点，因此正方形的起始点需要是(-10,-10),目前正方形子弹的大小为20*20像素
+				sub bx,10
+				mov dx,[esi+2]
+				sub dx,2
+				mov cx,20
+				mov bulletheight,cx
+				mov cx,5
+				mov bulletwidth,cx
+			.ENDIF
 			mov ax,WORD PTR [esi+4]
-			mov bx,[esi]         ; 子弹目前是正方形，为了使其中心就是之前的子弹点，因此正方形的起始点需要是(-10,-10),目前正方形子弹的大小为20*20像素
-			sub bx,10
-			mov dx,[esi+2]
-			sub dx,10
 			.IF ax == 1  
-				INVOKE BitBlt, hdcMempage, bx, dx, 20, 20, hdcMemblack, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemblack, 0, 0, SRCCOPY
 			.ELSEIF ax==2
-				INVOKE BitBlt, hdcMempage, bx, dx, 20, 20, hdcMemwhite, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemwhite, 0, 0, SRCCOPY
 			.ENDIF
 			pop ecx
 			dec ecx
