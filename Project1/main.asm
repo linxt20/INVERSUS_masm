@@ -1003,13 +1003,73 @@ setbulletcd PROC block: PTR WORD
 	mov esi, block
 	.IF WORD PTR [esi+8] < 4  ; 子弹回复冷却cd，每3s恢复一个子弹
 		inc WORD PTR [esi+10]
-		.IF WORD PTR [esi+10] == 100
+		.IF WORD PTR [esi+10] == 50
 			mov WORD PTR [esi+10],0
 			inc WORD PTR [esi+8]
 		.ENDIF
 	.ENDIF
 	ret
 setbulletcd ENDP
+
+rectconflect PROC x:WORD,y:WORD,color:WORD  
+; 返回eax，为0表示此时该坐标指示的块正常，
+;为1表示该坐标指示的块进入到了虚空地区，
+;为2表示改坐标指示的块进入到对手颜色的块
+	mov ax,y   ;检测白方的左上角是否在变色路径上
+	mov bx,x
+	call calCoordinate
+	mov dx,[map+ax]
+	.IF dx == color
+		mov eax,2
+		ret
+	.ELSEIF dx == 0
+		mov eax,1
+		ret
+	.ENDIF
+
+	mov ax,y   ;检测白方的左下角是否在变色路径上
+	add ax,23
+	mov bx,x
+	call calCoordinate
+	mov dx,[map+ax]
+	.IF dx == color
+		mov eax,2
+		ret
+	.ELSEIF dx == 0
+		mov eax,1
+		ret
+	.ENDIF
+
+	mov ax,y   ;检测白方的右上角是否在变色路径上
+	mov bx,x
+	add bx,23
+	call calCoordinate
+	mov dx,[map+ax]
+	.IF dx == color
+		mov eax,2
+		ret
+	.ELSEIF dx == 0
+		mov eax,1
+		ret
+	.ENDIF
+
+	mov ax,y   ;检测白方的右下角是否在变色路径上
+	add ax,23
+	mov bx,x
+	add bx,23
+	call calCoordinate
+	mov dx,[map+ax]
+	.IF dx == color
+		mov eax,2
+		ret
+	.ELSEIF dx == 0
+		mov eax,1
+		ret
+	.ENDIF
+
+	mov eax,0
+	ret
+rectconflect ENDP
 
 TimerPROC PROC USES ebx
 
@@ -1024,77 +1084,49 @@ TimerPROC PROC USES ebx
 
 			cmp UpKeyHold,1
 			jne TT@1
-			mov [whiteblock+6],1
-			mov ax,[whiteblock+2]
+			mov [whiteblock+6],1  ; 加上方向
+
+			mov ax,[whiteblock+2]  
 			sub ax,4
-			mov bx,[whiteblock]
-			call calCoordinate
-			.IF [map+ax] == 1
-				mov ax,[whiteblock+2]
-				sub ax,4
-				mov bx,[whiteblock]
-				add bx,23
-				call calCoordinate
-				.IF [map+ax] == 1
-					sub [whiteblock+2],4
-				.ENDIF
+			invoke rectconflect,[whiteblock],ax,2  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				sub [whiteblock+2],4
 			.ENDIF
 
 		TT@1:
 			cmp DownKeyHold,1
 			jne TT@2
-			mov [whiteblock+6],2
-			mov ax,[whiteblock+2]
-			add ax,27
-			mov bx,[whiteblock]
-			call calCoordinate
-			.IF [map+ax] == 1
-				mov ax,[whiteblock+2]
-				add ax,27
-				mov bx,[whiteblock]
-				add bx,23
-				call calCoordinate
-				.IF [map+ax] == 1
-					add [whiteblock+2],4
-				.ENDIF
+			mov [whiteblock+6],2  ; 加上方向
+
+			mov ax,[whiteblock+2]  
+			add ax,4
+			invoke rectconflect,[whiteblock],ax,2  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				add [whiteblock+2],4
 			.ENDIF
 		
 		TT@2:
 			cmp LeftKeyHold,1
 			jne TT@3
-			mov [whiteblock+6],3
-			mov ax,[whiteblock+2]
+			mov [whiteblock+6],3  ; 加上方向
+
 			mov bx,[whiteblock]
 			sub bx,4
-			call calCoordinate
-			.IF [map+ax] == 1
-				mov ax,[whiteblock+2]
-				mov bx,[whiteblock]
-				sub bx,4
-				add ax,23
-				call calCoordinate
-				.IF [map+ax] == 1
-					sub [whiteblock],4
-				.ENDIF
+			invoke rectconflect,bx,[whiteblock+2],2  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				sub [whiteblock],4
 			.ENDIF
 		
 		TT@3:
 			cmp RightKeyHold,1
 			jne TT@4
-			mov [whiteblock+6],4
-			mov ax,[whiteblock+2]
-			add ax,23
+			mov [whiteblock+6],4  ; 加上方向
+
 			mov bx,[whiteblock]
-			add bx,27
-			call calCoordinate
-			.IF [map+ax] == 1
-				mov ax,[whiteblock+2]
-				mov bx,[whiteblock]
-				add bx,27
-				call calCoordinate
-				.IF [map+ax] == 1
-					add [whiteblock],4
-				.ENDIF
+			add bx,4
+			invoke rectconflect,bx,[whiteblock+2],2  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				add [whiteblock],4
 			.ENDIF
 		
 		TT@4:
@@ -1110,76 +1142,48 @@ TimerPROC PROC USES ebx
 			cmp WKeyHold,1
 			jne TT@6
 			mov [blackblock+6],1
-			mov ax,[blackblock+2]
+			
+			mov ax,[blackblock+2]  
 			sub ax,4
-			mov bx,[blackblock]
-			call calCoordinate
-			.IF [map+ax] == 2
-				mov ax,[blackblock+2]
-				sub ax,4
-				mov bx,[blackblock]
-				add bx,23
-				call calCoordinate
-				.IF [map+ax] == 2
-					sub [blackblock+2],4
-				.ENDIF
+			invoke rectconflect,[blackblock],ax,1  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				sub [blackblock+2],4
 			.ENDIF
 		
 		TT@6:
 			cmp SKeyHold,1
 			jne TT@7
 			mov [blackblock+6],2
-			mov ax,[blackblock+2]
-			add ax,27
-			mov bx,[blackblock]
-			call calCoordinate
-			.IF [map+ax] == 2
-				mov ax,[blackblock+2]
-				add ax,27
-				mov bx,[blackblock]
-				add bx,23
-				call calCoordinate
-				.IF [map+ax] == 2
-					add [blackblock+2],4
-				.ENDIF
+
+			mov ax,[blackblock+2]  
+			add ax,4
+			invoke rectconflect,[blackblock],ax,1  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				add [blackblock+2],4
 			.ENDIF
 
 		TT@7:
 			cmp AKeyHold,1
 			jne TT@8
 			mov [blackblock+6],3
-			mov ax,[blackblock+2]
+
 			mov bx,[blackblock]
 			sub bx,4
-			call calCoordinate
-			.IF [map+ax] == 2
-				mov ax,[blackblock+2]
-				mov bx,[blackblock]
-				sub bx,4
-				add ax,23
-				call calCoordinate
-				.IF [map+ax] == 2
-					sub [blackblock],4
-				.ENDIF
+			invoke rectconflect,bx,[blackblock+2],1  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				sub [blackblock],4
 			.ENDIF
 
 		TT@8:
 			cmp DKeyHold,1
 			jne TT@9
 			mov [blackblock+6],4
-			mov ax,[blackblock+2]
-			add ax,23
+
 			mov bx,[blackblock]
-			add bx,27
-			call calCoordinate
-			.IF [map+ax] == 2
-				mov ax,[blackblock+2]
-				mov bx,[blackblock]
-				add bx,27
-				call calCoordinate
-				.IF [map+ax] == 2
-					add [blackblock],4
-				.ENDIF
+			add bx,4
+			invoke rectconflect,bx,[blackblock+2],1  ; 判断移动后的位置是否合法
+			.IF eax == 0
+				add [blackblock],4
 			.ENDIF
 		
 		TT@9:
@@ -1227,7 +1231,7 @@ playmusic ENDP
 emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
 
 	invoke CreateThread,NULL,NULL,addr playmusic,NULL,0,NULL ; 新开一个线程用于音效播放，音效播放完线程就结束
-    invoke CloseHandle,eax 
+    invoke CloseHandle,eax
 	;初始化子弹的位置、颜色和方向
 	add xCoor,12                    
 	add yCoor,12
@@ -1342,98 +1346,24 @@ LoopExit:
 	mov ax,WORD PTR [esi+2]
 	mov bx,WORD PTR [esi]
 	call calCoordinate
-	mov bulletPosition,ax
 	mov dx,[map+ax]
 	.IF dx == [esi+4]
 		.IF [map+ax] == 1  ;黑方发的子弹
 			mov [map+ax],2
 
-			mov ax,[whiteblock+2]   ;检测白方的左上角是否在变色路径上
-			mov bx,[whiteblock]
-			call calCoordinate
-			.IF ax == bulletPosition
+			invoke rectconflect,[whiteblock],[whiteblock+2],2
+			.IF eax == 2
 				mov ax,2
 				push ecx
 				call someOneDead
 				pop ecx
 			.ENDIF
-
-			mov ax,[whiteblock+2]   ;检测白方的左下角是否在变色路径上
-			add ax,23
-			mov bx,[whiteblock]
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,2
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
-			mov ax,[whiteblock+2]   ;检测白方的右上角是否在变色路径上
-			mov bx,[whiteblock]
-			add bx,23
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,2
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
-			mov ax,[whiteblock+2]   ;检测白方的右下角是否在变色路径上
-			add ax,23
-			mov bx,[whiteblock]
-			add bx,23
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,2
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
 
 		.ELSEIF [map+ax] == 2      ;白方发的子弹
 			mov [map+ax],1
 
-			mov ax,[blackblock+2]   ;检测黑方的左上角是否在变色路径上
-			mov bx,[blackblock]
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,1
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
-			mov ax,[blackblock+2]   ;检测黑方的左下角是否在变色路径上
-			add ax,23
-			mov bx,[blackblock]
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,1
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
-			mov ax,[blackblock+2]   ;检测白方的右上角是否在变色路径上
-			mov bx,[blackblock]
-			add bx,23
-			call calCoordinate
-			.IF ax == bulletPosition
-				mov ax,1
-				push ecx
-				call someOneDead
-				pop ecx
-			.ENDIF
-
-			mov ax,[blackblock+2]   ;检测白方的右下角是否在变色路径上
-			add ax,23
-			mov bx,[blackblock]
-			add bx,23
-			call calCoordinate
-			.IF ax == bulletPosition
+			invoke rectconflect,[blackblock],[blackblock+2],1
+			.IF eax == 2
 				mov ax,1
 				push ecx
 				call someOneDead
