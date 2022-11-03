@@ -138,7 +138,7 @@ helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0 
 helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
 
 ; 音频文件路径
-shoot_Mp3_PATH			BYTE	"..\Project1\mp3\shoot.wav"          ; 射击音频文件路径
+shoot_Mp3_PATH			BYTE	"..\Project1\audio\shoot.wav",0      ; 射击音频文件路径
 
 
 ; 结构变量定义区域
