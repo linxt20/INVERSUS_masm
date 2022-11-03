@@ -137,10 +137,6 @@ helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0 
 
 helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
 
-; 音频文件路径
-shoot_Mp3_PATH			BYTE	"..\Project1\audio\shoot.wav",0      ; 射击音频文件路径
-
-
 ; 结构变量定义区域
 ; Define the Application's Window class structure.
 MainWin					WNDCLASS	<NULL,WinProc,NULL,NULL,NULL,NULL,NULL, COLOR_WINDOW,NULL,className>
@@ -166,9 +162,9 @@ hdcMemColors			DWORD 20 DUP(?) ; 20种颜色显示句柄
 
 ; 菜单选项变量
 WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义主题色界面
-SelectMenu				SDWORD 0 ; 正在选择的菜单项 0表示第一项
-SelectMenu2				SDWORD 0 ; 用来在自定义界面给p2提供光标移动选择
-SelectMenu3				SDWORD 0 ; 用来在自定义界面对背景进行选择
+SelectMenu				SDWORD 0 ; 正在选择的菜单项 0表示第一项; 或者用于自定义主题颜色界面给p1提供光标移动选择
+SelectMenu2				SDWORD 0 ; 用来在自定义主题颜色界面给p2提供光标移动选择
+SelectMenu3				SDWORD 0 ; 用来在自定义主题颜色界面对背景进行选择
 
 ; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向，第五位为剩余子弹数（每人上限为4）
 ;第六位是冷却（子弹恢复）计数器，当达到100时（也即，子弹恢复时间为3秒）清零，并增加一发子弹
