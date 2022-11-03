@@ -137,12 +137,6 @@ helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0 
 
 helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
 
-; 图片文件路径
-; 选关界面地图，纯画会比较复杂，于是直接显示图片
-IDR_MAP1_PATH			BYTE	"..\Project1\image\1.jpg",0          ; 地图1图片路径
-IDR_MAP2_PATH			BYTE	"..\Project1\image\2.jpg",0          ; 地图2图片路径
-IDR_MAP3_PATH			BYTE	"..\Project1\image\3.jpg",0          ; 地图3图片路径
-
 ; 音频文件路径
 shoot_Mp3_PATH			BYTE	"..\Project1\mp3\shoot.wav"          ; 射击音频文件路径
 

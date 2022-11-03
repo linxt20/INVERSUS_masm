@@ -255,11 +255,11 @@ WinProc PROC,
 		mov hdcMemMap3, eax
 
 		; 主要图片存储进句柄
-		INVOKE LoadImageA, hdc, offset IDR_MAP1_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE LoadImageA, hInstance,118,0,160,120,0
 		INVOKE SelectObject, hdcMemMap1, eax
-		INVOKE LoadImageA, hdc, offset IDR_MAP2_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE LoadImageA, hInstance,119,0,160,120,0
 		INVOKE SelectObject, hdcMemMap2, eax
-		INVOKE LoadImageA, hdc, offset IDR_MAP3_PATH, 0, 160, 120, LR_LOADFROMFILE
+		INVOKE LoadImageA, hInstance,120,0,160,120,0
 		INVOKE SelectObject, hdcMemMap3, eax
 
 		; 释放当前窗口DC
@@ -1431,7 +1431,15 @@ calCoordinate PROC
 	ret
 calCoordinate ENDP
 
+playmusic PROC
+	INVOKE PlaySound,124,hInstance,SND_RESOURCE
+	ret
+playmusic ENDP
+
 emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
+
+	invoke CreateThread,NULL,NULL,addr playmusic,NULL,0,NULL 
+    invoke CloseHandle,eax 
 	add xCoor,12
 	add yCoor,12
 	mov esi,offset bullets
@@ -1455,8 +1463,6 @@ emitBullet PROC USES esi,xCoor:WORD,yCoor:WORD,color:WORD,heading:WORD
 	.IF currentBullet == 10
 		mov currentBullet,0
 	.ENDIF
-
-	INVOKE PlaySound,offset shoot_Mp3_PATH,0,SND_ASYNC
 	ret
 emitBullet ENDP
 
