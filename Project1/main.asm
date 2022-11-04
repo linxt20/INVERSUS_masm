@@ -1224,7 +1224,7 @@ calCoordinate ENDP
 
 playmusic PROC
 	; 射击音效播放
-	INVOKE PlaySound,124,hInstance,SND_RESOURCE
+	INVOKE PlaySound,124,hInstance,SND_RESOURCE+SND_ASYNC
 	ret
 playmusic ENDP
 
