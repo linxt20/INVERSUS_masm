@@ -132,22 +132,22 @@ WinProc PROC,
 			jne @nspace1
 			mov SpaceKeyHold,1
 			.IF WhichMenu == 2   ;在游戏界面设置了按键判断标志，如果长按那么只会标记1次按键，保障按一次发射一个子弹
-				mov eax,attack_black  
+				mov eax,attack_p1  
 				mul SpaceKeyHold
 				mov SpaceKeyHold,eax
 				mov eax,0
-				mov attack_black,eax
+				mov attack_p1,eax
 			.ENDIF
 		@nspace1:
 			cmp eax,13  ;识别enter键
 			jne @nenter1
 			mov EnterKeyHold,1
 			.IF WhichMenu == 2  ;在游戏界面设置了按键判断标志，如果长按那么只会标记1次按键，保障按一次发射一个子弹
-				mov eax,attack_white
+				mov eax,attack_p2
 				mul EnterKeyHold
 				mov EnterKeyHold,eax
 				mov eax,0
-				mov attack_white,eax
+				mov attack_p2,eax
 			.ENDIF
 		@nenter1:
 			cmp eax,27 ;识别esc键
@@ -197,13 +197,13 @@ WinProc PROC,
 			cmp eax,32   ;识别空格键
 			jne @nspace2
 			mov eax,1
-			mov attack_black,eax
+			mov attack_p1,eax
 			mov SpaceKeyHold,0
 		@nspace2:
 			cmp eax,13    ;识别enter键
 			jne @nenter2
 			mov eax,1
-			mov attack_white,eax
+			mov attack_p2,eax
 			mov EnterKeyHold,0
 		@nenter2:
 			cmp eax,65    ;识别a键
@@ -331,29 +331,29 @@ EscapeKeyDown ENDP
 
 NewRound PROC  ; 进入游戏实现自动初始化
 	initblock: ; 初始化黑白块初始位置
-		mov ax,[black_initpos]
-		mov [blackblock],ax
+		mov ax,[p1_initpos]
+		mov [p1block],ax
 
-		mov ax,[black_initpos+2]
-		mov [blackblock+2],ax
+		mov ax,[p1_initpos+2]
+		mov [p1block+2],ax
 
-		mov [blackblock+6],1
+		mov [p1block+6],1
 
-		mov [blackblock+8],4
+		mov [p1block+8],4
 
-		mov [blackblock+10],0
+		mov [p1block+10],0
 
-		mov ax,[white_initpos]
-		mov [whiteblock],ax
+		mov ax,[p2_initpos]
+		mov [p2block],ax
 
-		mov ax,[white_initpos+2]
-		mov [whiteblock+2],ax
+		mov ax,[p2_initpos+2]
+		mov [p2block+2],ax
 
-		mov [whiteblock+6],1
+		mov [p2block+6],1
 
-		mov [whiteblock+8],4
+		mov [p2block+8],4
 
-		mov [whiteblock+10],0
+		mov [p2block+10],0
 
 	initstatusFlag: ; 还原无胜利标志
 		mov statusFlag,0	
@@ -578,10 +578,10 @@ chooseMenu PROC  ; 选择菜单函数
 			; 将不同颜色的句柄直接赋给三个显示用的hdcMem
 			mov edx, SelectMenu
 			mov eax, [hdcMemColors+edx*4]
-			mov hdcMemblack, eax
+			mov hdcMemp1, eax
 			mov edx, SelectMenu2
 			mov eax, [hdcMemColors+edx*4]
-			mov hdcMemwhite, eax
+			mov hdcMemp2, eax
 			mov edx, SelectMenu3
 			mov eax, [hdcMemColors+edx*4]
 			mov hdcMembg, eax
@@ -642,9 +642,9 @@ L1:
 
 	; 将不同颜色的句柄直接赋给三个显示用的hdcMem
 	mov eax, [hdcMemColors]
-	mov hdcMemblack, eax
+	mov hdcMemp1, eax
 	mov eax, [hdcMemColors+4]
-	mov hdcMemwhite, eax
+	mov hdcMemp2, eax
 	mov eax, [hdcMemColors+8]
 	mov hdcMembg, eax
 	
@@ -848,7 +848,7 @@ PaintProc PROC USES ebx esi,
 				add bl, 15
 				sal bx, 5
 				push ecx
-				INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemblack, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemp1, 0, 0, SRCCOPY
 				pop ecx
 			.ELSEIF ax == 2
 				mov eax, ecx  ;此时内层循环下标为20-eax，也即20-al(更高位都为0)
@@ -865,7 +865,7 @@ PaintProc PROC USES ebx esi,
 				add bl, 15
 				sal bx, 5
 				push ecx
-				INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemwhite, 0, 0, SRCCOPY
+				INVOKE BitBlt, hdcMempage, ax, bx, 31, 31, hdcMemp2, 0, 0, SRCCOPY
 				pop ecx
 			.ENDIF
 			add esi, type map
@@ -878,12 +878,12 @@ PaintProc PROC USES ebx esi,
 			jne Lx
 
 			; 在布局页面是画上两个主角
-			INVOKE BitBlt, hdcMempage, [blackblock], [blackblock+2], [blackblock+4], [blackblock+4], hdcMemblack, 0, 0, SRCCOPY
-			INVOKE BitBlt, hdcMempage, [whiteblock], [whiteblock+2], [whiteblock+4], [whiteblock+4], hdcMemwhite, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdcMempage, [p1block], [p1block+2], [p1block+4], [p1block+4], hdcMemp1, 0, 0, SRCCOPY
+			INVOKE BitBlt, hdcMempage, [p2block], [p2block+2], [p2block+4], [p2block+4], hdcMemp2, 0, 0, SRCCOPY
 
 			; 这部分是画两个主角身上的子弹
-			INVOKE DrawBullet, addr blackblock,hdcMemwhite
-			INVOKE DrawBullet, addr whiteblock,hdcMemblack
+			INVOKE DrawBullet, addr p1block,hdcMemp2
+			INVOKE DrawBullet, addr p2block,hdcMemp1
 
 				mov ecx,10
 			L1:                     ; 循环画子弹
@@ -916,9 +916,9 @@ PaintProc PROC USES ebx esi,
 				.ENDIF
 				mov ax,WORD PTR [esi+4] 
 				.IF ax == 1   ; 判断子弹的颜色，并画上子弹
-					INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemblack, 0, 0, SRCCOPY
+					INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemp1, 0, 0, SRCCOPY
 				.ELSEIF ax==2
-					INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemwhite, 0, 0, SRCCOPY
+					INVOKE BitBlt, hdcMempage, bx, dx, bulletheight, bulletwidth, hdcMemp2, 0, 0, SRCCOPY
 				.ENDIF
 				pop ecx
 				dec ecx
@@ -1078,120 +1078,120 @@ TimerPROC PROC USES ebx
 			call updateBullets  ; 更新子弹
 
 			; 子弹回复冷却cd，每3s恢复一个子弹
-			INVOKE setbulletcd,addr whiteblock
+			INVOKE setbulletcd,addr p2block
 			; 子弹回复冷却cd，每3s恢复一个子弹
-			INVOKE setbulletcd,addr blackblock
+			INVOKE setbulletcd,addr p1block
 
 			cmp UpKeyHold,1
 			jne TT@1
-			mov [whiteblock+6],1  ; 加上方向
+			mov [p2block+6],1  ; 加上方向
 
-			mov ax,[whiteblock+2]  
+			mov ax,[p2block+2]  
 			sub ax,4
-			invoke rectconflect,[whiteblock],ax,2  ; 判断移动后的位置是否合法
+			invoke rectconflect,[p2block],ax,2  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				sub [whiteblock+2],4
+				sub [p2block+2],4
 			.ENDIF
 
 		TT@1:
 			cmp DownKeyHold,1
 			jne TT@2
-			mov [whiteblock+6],2  ; 加上方向
+			mov [p2block+6],2  ; 加上方向
 
-			mov ax,[whiteblock+2]  
+			mov ax,[p2block+2]  
 			add ax,4
-			invoke rectconflect,[whiteblock],ax,2  ; 判断移动后的位置是否合法
+			invoke rectconflect,[p2block],ax,2  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				add [whiteblock+2],4
+				add [p2block+2],4
 			.ENDIF
 		
 		TT@2:
 			cmp LeftKeyHold,1
 			jne TT@3
-			mov [whiteblock+6],3  ; 加上方向
+			mov [p2block+6],3  ; 加上方向
 
-			mov bx,[whiteblock]
+			mov bx,[p2block]
 			sub bx,4
-			invoke rectconflect,bx,[whiteblock+2],2  ; 判断移动后的位置是否合法
+			invoke rectconflect,bx,[p2block+2],2  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				sub [whiteblock],4
+				sub [p2block],4
 			.ENDIF
 		
 		TT@3:
 			cmp RightKeyHold,1
 			jne TT@4
-			mov [whiteblock+6],4  ; 加上方向
+			mov [p2block+6],4  ; 加上方向
 
-			mov bx,[whiteblock]
+			mov bx,[p2block]
 			add bx,4
-			invoke rectconflect,bx,[whiteblock+2],2  ; 判断移动后的位置是否合法
+			invoke rectconflect,bx,[p2block+2],2  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				add [whiteblock],4
+				add [p2block],4
 			.ENDIF
 		
 		TT@4:
 			cmp EnterKeyHold,1
 			jne TT@5
-			.IF WORD PTR [whiteblock+8] > 0
-				dec WORD PTR [whiteblock+8]
-				invoke emitBullet,[whiteblock],[whiteblock+2],2,[whiteblock+6]
+			.IF WORD PTR [p2block+8] > 0
+				dec WORD PTR [p2block+8]
+				invoke emitBullet,[p2block],[p2block+2],2,[p2block+6]
 			.ENDIF
 			mov EnterKeyHold,0
 
 		TT@5:
 			cmp WKeyHold,1
 			jne TT@6
-			mov [blackblock+6],1
+			mov [p1block+6],1
 			
-			mov ax,[blackblock+2]  
+			mov ax,[p1block+2]  
 			sub ax,4
-			invoke rectconflect,[blackblock],ax,1  ; 判断移动后的位置是否合法
+			invoke rectconflect,[p1block],ax,1  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				sub [blackblock+2],4
+				sub [p1block+2],4
 			.ENDIF
 		
 		TT@6:
 			cmp SKeyHold,1
 			jne TT@7
-			mov [blackblock+6],2
+			mov [p1block+6],2
 
-			mov ax,[blackblock+2]  
+			mov ax,[p1block+2]  
 			add ax,4
-			invoke rectconflect,[blackblock],ax,1  ; 判断移动后的位置是否合法
+			invoke rectconflect,[p1block],ax,1  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				add [blackblock+2],4
+				add [p1block+2],4
 			.ENDIF
 
 		TT@7:
 			cmp AKeyHold,1
 			jne TT@8
-			mov [blackblock+6],3
+			mov [p1block+6],3
 
-			mov bx,[blackblock]
+			mov bx,[p1block]
 			sub bx,4
-			invoke rectconflect,bx,[blackblock+2],1  ; 判断移动后的位置是否合法
+			invoke rectconflect,bx,[p1block+2],1  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				sub [blackblock],4
+				sub [p1block],4
 			.ENDIF
 
 		TT@8:
 			cmp DKeyHold,1
 			jne TT@9
-			mov [blackblock+6],4
+			mov [p1block+6],4
 
-			mov bx,[blackblock]
+			mov bx,[p1block]
 			add bx,4
-			invoke rectconflect,bx,[blackblock+2],1  ; 判断移动后的位置是否合法
+			invoke rectconflect,bx,[p1block+2],1  ; 判断移动后的位置是否合法
 			.IF eax == 0
-				add [blackblock],4
+				add [p1block],4
 			.ENDIF
 		
 		TT@9:
 			cmp SpaceKeyHold,1
 			jne TimerTickReturn
-			.IF WORD PTR [blackblock+8] > 0
-				dec WORD PTR [blackblock+8]
-				invoke emitBullet,[blackblock],[blackblock+2],1,[blackblock+6]
+			.IF WORD PTR [p1block+8] > 0
+				dec WORD PTR [p1block+8]
+				invoke emitBullet,[p1block],[p1block+2],1,[p1block+6]
 			.ENDIF
 			mov SpaceKeyHold,0
 		.ENDIF
@@ -1351,7 +1351,7 @@ LoopExit:
 		.IF [map+ax] == 1  ;黑方发的子弹
 			mov [map+ax],2
 
-			invoke rectconflect,[whiteblock],[whiteblock+2],2
+			invoke rectconflect,[p2block],[p2block+2],2
 			.IF eax == 2
 				mov ax,2
 				push ecx
@@ -1362,7 +1362,7 @@ LoopExit:
 		.ELSEIF [map+ax] == 2      ;白方发的子弹
 			mov [map+ax],1
 
-			invoke rectconflect,[blackblock],[blackblock+2],1
+			invoke rectconflect,[p1block],[p1block+2],1
 			.IF eax == 2
 				mov ax,1
 				push ecx
@@ -1386,8 +1386,8 @@ someOneDead PROC
 	
 	.IF ax == 1 ; 如果被击中的是黑色，那么白色胜利
 		mov statusFlag,2  ;将胜利标志位置2
-		mov [blackblock],999
-		mov [blackblock+2],999
+		mov [p1block],999
+		mov [p1block+2],999
 		mov ecx,300
 	L1:
 		mov ax,cx
@@ -1397,8 +1397,8 @@ someOneDead PROC
 		loop L1
 	.ELSE  ; 如果被击中的是白色，黑色胜利
 		mov statusFlag,1  ;将胜利标志位置1
-		mov [whiteblock],999
-		mov [whiteblock+2],999
+		mov [p2block],999
+		mov [p2block+2],999
 		mov ecx,300
 	L2:
 		mov ax,cx

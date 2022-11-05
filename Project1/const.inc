@@ -151,8 +151,8 @@ hMainWnd				DWORD ? ; 总窗口句柄
 hInstance				DWORD ? ; 用于创建调用进程的文件的句柄
 hdc						DWORD ? ; 程序窗口的句柄
 hdcMempage				DWORD ? ; 布局页面显示句柄
-hdcMemwhite				DWORD ? ; 白色块显示句柄
-hdcMemblack				DWORD ? ; 黑色块显示句柄
+hdcMemp2				DWORD ? ; 白色块显示句柄
+hdcMemp1				DWORD ? ; 黑色块显示句柄
 hdcMembg				DWORD ? ; 背景块显示句柄
 hdcMemhelp				DWORD ? ; 帮助图显示句柄
 hdcMemMap1				DWORD ? ; 地图1图片显示句柄
@@ -168,12 +168,12 @@ SelectMenu3				SDWORD 0 ; 用来在自定义主题颜色界面对背景进行选
 
 ; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向，第五位为剩余子弹数（每人上限为4）
 ;第六位是冷却（子弹恢复）计数器，当达到100时（也即，子弹恢复时间为3秒）清零，并增加一发子弹
-blackblock				WORD 164,164,23,1,4,0
-whiteblock				WORD 452,292,23,1,4,0
+p1block				WORD 164,164,23,1,4,0
+p2block				WORD 452,292,23,1,4,0
 
 ; 每一轮黑白块的初始位置 第一个数是横向的刻度，第二个数是纵向的刻度
-black_initpos			WORD 164,164
-white_initpos			WORD 452,292
+p1_initpos			WORD 164,164
+p2_initpos			WORD 452,292
 
 ; 颜色变量，用于自定义主题页面
 Colors					DWORD 00000000h,00FFFFFFh,00CCA700h,00FF0000h,0000FF00h
@@ -245,8 +245,8 @@ currentBullet			WORD 0
 
 ; 状态变量
 statusFlag				WORD 0 ;状态flag，0代表未胜利，游戏正常进行，1代表黑方胜利，2代表白方胜利，3代表暂停
-attack_black            DWORD 1 ;space正在按下则设置为0，与space的状态位相乘，使其保持为0，这样就能实现按一次只发射一次子弹
-attack_white            DWORD 1 ;同上理
+attack_p1            DWORD 1 ;space正在按下则设置为0，与space的状态位相乘，使其保持为0，这样就能实现按一次只发射一次子弹
+attack_p2            DWORD 1 ;同上理
 
 ; 按键是否按下的指示变量
 UpKeyHold				DWORD 0 
