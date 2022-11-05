@@ -64,8 +64,6 @@ SetBkColor				PROTO STDCALL :DWORD,:DWORD
 TextOutA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ; 创建指定的字体
 CreateFontA				PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
-; 运行windows命令函数
-ShellExecuteA			PROTO STDCALL :DWORD,:DWORD,:DWORD,:DWORD,:DWORD,:DWORD
 ; 播放音频文件函数
 PlaySound				PROTO STDCALL :DWORD,:DWORD,:DWORD
 
@@ -97,48 +95,73 @@ PVPText					BYTE	"P V P",0				; 双人小游戏模式标签
 PVEText					BYTE	"P V E",0				; 单机模式标签     unused
 BackText				BYTE	"<-back",0				; 返回上一级目录标签
 arrowText				BYTE	"->",0					; 指示地图选择标签
-pauseText				BYTE	"Pausing, press Esc to continue",0   ; 暂停标签
+pauseText				BYTE	"     Pausing, press Esc to continue, press C to quit.      ",0   ; 暂停标签
 bgChooseText			BYTE	"background",0			; 背景选择标签
 p1ChooseText			BYTE	"    p1    ",0			; p1选择标签
 p2ChooseText			BYTE	"    p2    ",0			; p2选择标签
 
 ; 以下部分为帮助文档的内容，采用文字显示和笔刷绘画，能够提供较大的自定义属性
-helptext_title1			byte	"game rule show",0  ; 14
+helptext_title1			byte	"GAME RULE SHOW",0  ; 14
 
-helptext_hang1			byte	"INVERSUS is a shooting game, in the game, you need to",0  ; 53
-helptext_hang2			byte	"play for one of the black and white, and compared with",0  ;54
-helptext_hang3			byte	"the other party. The victory of the game goal is simple",0   ;55
-helptext_hang4			byte	"which is only to hit each other.",0     ;32
-helptext_hang5			byte	"Please note that the map is also divided into black and",0    ;55
-helptext_hang6			byte	"white two colors, you can only move in the area of the",0  ;54
-helptext_hang7			byte	"contrary to their own color, you can shoot to change",0  ;52
-helptext_hang8			byte	"the path of regional color so that you can make your",0       ;52
-helptext_hang9			byte	"role in this area.",0   ;18
+helptext_hang1			byte	"INVERSUS is a shooting game. In this game, you need to",0  ; 54
+helptext_hang2			byte	"manipulate one of two color blocks to move and shoot.",0  ;53
+helptext_hang3			byte	"The goal to win is to HIT THE OPPONENT.",0   ;39
+helptext_hang4			byte	"Please note that the map is also divided into two colors.",0     ;57
+helptext_hang5			byte	"You can only move in areas that are the OPPOSITE of your",0    ;56
+helptext_hang6			byte	"color.You can change the color of any area, but void area,",0  ;58
+helptext_hang7			byte	"by shooting. The color of the shot path will be changed",0  ;55
+helptext_hang8			byte	"to your opposite color.",0       ;23
 
-helptext_title2			byte	"game control show",0  ;17
-helptext_hang10_1		byte	"play 1: black block move by",0  ;27
-helptext_hang10_2		byte	"w",0 ;1
-helptext_hang10_3		byte	"s",0 ;1
-helptext_hang10_4		byte	"a",0  ;1
-helptext_hang10_5		byte	"d",0  ;1
-helptext_hang10_6		byte	"shoot by",0  ; 8
-helptext_hang10_7		byte	"space",0  ;5
-helptext_hang11_1		byte	"play 2: white block move by",0  ;27
-helptext_hang11_2		byte	"up",0    ; 2
-helptext_hang11_3		byte	"down",0  ; 4
-helptext_hang11_4		byte	"<-",0   ;  2
-helptext_hang11_5		byte	"->",0   ; 2
-helptext_hang11_6		byte	"shoot by",0  ; 8
-helptext_hang11_7		byte	"enter",0  ;5
-helptext_hang12_1       byte     "In custom menu,selcet background by",0 ;35
+helptext_title2			byte	"GAME CONTROL SHOW",0  ;17
+helptext_hang9_1		byte	"Player 1: Move by",0  ;17
+helptext_hang9_2		byte	"W",0 ;1
+helptext_hang9_3		byte	"S",0 ;1
+helptext_hang9_4		byte	"A",0  ;1
+helptext_hang9_5		byte	"D",0  ;1
+helptext_hang9_6		byte	".Shoot by",0  ; 9
+helptext_hang9_7		byte	"SPACE",0  ;5
+helptext_hang10_1		byte	"Player 2: Move by",0  ;17
+helptext_hang10_2		byte	"UP",0    ; 2
+helptext_hang10_3		byte	"DOWN",0  ; 4
+helptext_hang10_4		byte	"<-",0   ;  2
+helptext_hang10_5		byte	"->",0   ; 2
+helptext_hang10_6		byte	".Shoot by",0  ; 9
+helptext_hang10_7		byte	"ENTER",0  ;5
+helptext_hang11			byte	"You can customize your color and background color in",0  ;52
+helptext_hang12_1       byte	"custom menu. Select background color by",0 ;39
 helptext_hang12_2		byte	"I",0    ; 1
 helptext_hang12_3		byte	"J",0  ; 1
 helptext_hang12_4		byte	"K",0   ;  1
 helptext_hang12_5		byte	"L",0   ; 1
-helptext_hang12_6       byte    "Select p1,p2",0 ;18
-helptext_hang13		byte	"color by theirs movekey,use enter or space to confirm",0  ; 53
+helptext_hang12_6       byte    "Select p1",0 ;9
+helptext_hang13			byte	",p2 color by your movekey.Press ENTER or SPACE to confirm.",0  ; 58
 
-helptext_hang14     BYTE   "-------------press enter or space to comeback-------------",0 ;54
+helptext_hang14			BYTE	"-----------------PRESS DOWN OR S TO GO ON-----------------",0 ;58
+
+helptext2_title1		BYTE	"SHOOT MECHANISM",0  ;15
+helptext2_hang1			BYTE	"Your bullets will NOT defeat the opponent directly.",0 ;51
+helptext2_hang2			BYTE	"Instead, they only change the color of the area they pass",0 ;57
+helptext2_hang3			BYTE	"through. Once part of the opponent's color block is in the",0 ;58
+helptext2_hang4			BYTE	"area where changed color, which means an illegal position,",0 ;58
+helptext2_hang5			BYTE	"it is defeated.",0 ;15
+
+helptext2_title2		BYTE	"PAUSE AND QUIT",0 ;14
+helptext2_hang6_1		BYTE	"During gaming, you can pause the game by pressing",0 ;49
+helptext2_hang6_2		BYTE	"ESC",0 ;3
+helptext2_hang7_1		BYTE	"You can continue the game by pressing",0 ;37
+helptext2_hang7_2		BYTE	"ESC",0 ;3
+helptext2_hang7_3		BYTE	"again.",0 ;6
+helptext2_hang8_1		BYTE	"If you want to quit the game, press",0 ;35
+helptext2_hang8_2		BYTE	"C",0 ;1
+helptext2_hang8_3		BYTE	"after pausing.",0 ;14
+
+helptext2_title3		BYTE	"CONTACT US",0 ;10
+helptext2_hang9			BYTE	"Lin Xintao: linxt20@mails.tsinghua.edu.cn",0 ;41
+helptext2_hang10		BYTE	"Du Jiakun: djk20@mails.tsinghua.edu.cn",0 ;38
+helptext2_hang11		BYTE	"Zhu Simo: zhusm18@mails.tsinghua.edu.cn",0 ;39
+
+helptext2_hang12		BYTE	"-----------------PRESS UP OR W TO GO BACK-----------------",0 ;58
+helptext2_hang13		BYTE	"---------------PRESS ENTER OR SPACE TO QUIT---------------",0 ;58
 
 ; 结构变量定义区域
 ; Define the Application's Window class structure.
@@ -158,16 +181,18 @@ hdcMemp2				DWORD ? ; 白色块显示句柄
 hdcMemp1				DWORD ? ; 黑色块显示句柄
 hdcMembg				DWORD ? ; 背景块显示句柄
 hdcMemhelp				DWORD ? ; 帮助图显示句柄
+hdcMemhelp2				DWORD ? ; 帮助图显示句柄2
 hdcMemMap1				DWORD ? ; 地图1图片显示句柄
 hdcMemMap2				DWORD ? ; 地图2图片显示句柄
 hdcMemMap3				DWORD ? ; 地图3图片显示句柄
 hdcMemColors			DWORD 20 DUP(?) ; 20种颜色显示句柄
 
 ; 菜单选项变量
-WhichMenu				DWORD 0 ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义主题色界面
+WhichMenu				DWORD 0  ; 哪个界面，0表示开始，1表示选择游戏模式，2表示正在游戏，3表示游戏结束，4代表帮助界面，5代表选关界面，6代表自定义主题色界面
 SelectMenu				SDWORD 0 ; 正在选择的菜单项 0表示第一项; 或者用于自定义主题颜色界面给p1提供光标移动选择
 SelectMenu2				SDWORD 0 ; 用来在自定义主题颜色界面给p2提供光标移动选择
 SelectMenu3				SDWORD 0 ; 用来在自定义主题颜色界面对背景进行选择
+helpPage				DWORD 1  ; 用来指示当前处于帮助界面的哪一面
 
 ; 方块状态变量  前两位是位置，第三位是大小，第四位是朝向(heading)，指示子弹发射的方向，第五位为剩余子弹数（每人上限为4）
 ;第六位是冷却（子弹恢复）计数器，当达到100时（也即，子弹恢复时间为3秒）清零，并增加一发子弹

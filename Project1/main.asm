@@ -170,6 +170,12 @@ WinProc PROC,
 			jne @nw1
 			mov WKeyHold,1
 		@nw1:
+			cmp eax,67
+			jne @nc1
+			.IF statusFlag == 3
+				mov WhichMenu,0
+			.ENDIF
+		@nc1:
 			.IF WhichMenu != 2
 				call chooseMenu
 			.ENDIF
@@ -489,6 +495,7 @@ chooseMenu PROC  ; 选择菜单函数
 				ret
 			.ELSEIF SelectMenu == 1 
 				mov WhichMenu,4
+				mov helpPage,1
 				ret
 			.ELSEIF SelectMenu == 2  ; 此时为进入自定义主题选择界面，初始化几个选择光标，p1在第一位，p2在第二位，p3在第三位
 				mov WhichMenu,6
@@ -535,6 +542,16 @@ chooseMenu PROC  ; 选择菜单函数
 		.IF eax == 13 || eax == 32  ; 确认键为enter和space 
 			mov WhichMenu,0
 			ret
+		.ENDIF
+		.IF eax == 38 || eax == 87   ; 识别向上按键和w
+			.IF helpPage == 2
+				dec helpPage
+			.ENDIF
+		.ENDIF
+		.IF eax == 40 || eax == 83  ; 识别向下按键和s
+			.IF helpPage == 1
+				inc helpPage
+			.ENDIF
 		.ENDIF
 	.ELSEIF WhichMenu == 5   ;选关界面
 		.IF eax == 38 || eax == 87   ; 识别向上按键和w
@@ -650,7 +667,7 @@ L1:
 	mov eax, [hdcMemColors+8]
 	mov hdcMembg, eax
 	
-	; 绘制帮助文档并存在hdcmemhelp
+	; 绘制帮助文档第一页并存在hdcmemhelp
 	INVOKE CreateCompatibleDC, hdc
 	mov hdcMemhelp, eax
 	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
@@ -658,60 +675,106 @@ L1:
 
 	invoke CreateSolidBrush, 02BA245h
 	invoke SelectObject, hdcMemhelp, eax
-	INVOKE Rectangle,hdcMemhelp,331,260,360,290  ; w
-	INVOKE Rectangle,hdcMemhelp,300,290,330,320  ; a
-	INVOKE Rectangle,hdcMemhelp,331,290,360,320  ; s
-	INVOKE Rectangle,hdcMemhelp,361,290,390,320  ; d
-	INVOKE Rectangle,hdcMemhelp,485,275,555,305  ; space
-	INVOKE Rectangle,hdcMemhelp,341,320,400,350  ; 上
-	INVOKE Rectangle,hdcMemhelp,300,350,340,380  ; 下
-	INVOKE Rectangle,hdcMemhelp,341,350,400,380  ; 左
-	INVOKE Rectangle,hdcMemhelp,401,350,440,380  ; 右
-	INVOKE Rectangle,hdcMemhelp,535,335,605,365  ; enter
-	INVOKE Rectangle,hdcMemhelp,431,380,460,410  ; I
-	INVOKE Rectangle,hdcMemhelp,400,410,430,440  ; J
-	INVOKE Rectangle,hdcMemhelp,431,410,460,440  ; K
-	INVOKE Rectangle,hdcMemhelp,461,410,490,440  ; L
+	INVOKE Rectangle,hdcMemhelp,220,240,250,270  ; w
+	INVOKE Rectangle,hdcMemhelp,190,270,220,300  ; a
+	INVOKE Rectangle,hdcMemhelp,220,270,250,300  ; s
+	INVOKE Rectangle,hdcMemhelp,250,270,280,300  ; d
+	INVOKE Rectangle,hdcMemhelp,385,255,455,285  ; space
+	INVOKE Rectangle,hdcMemhelp,230,300,290,330  ; 上
+	INVOKE Rectangle,hdcMemhelp,190,330,230,360  ; 下
+	INVOKE Rectangle,hdcMemhelp,230,330,290,360  ; 左
+	INVOKE Rectangle,hdcMemhelp,290,330,330,360  ; 右
+	INVOKE Rectangle,hdcMemhelp,435,315,505,345  ; enter
+	INVOKE Rectangle,hdcMemhelp,465,380,495,410  ; I
+	INVOKE Rectangle,hdcMemhelp,435,410,465,440  ; J
+	INVOKE Rectangle,hdcMemhelp,465,410,495,440  ; K
+	INVOKE Rectangle,hdcMemhelp,495,410,525,440  ; L
 
 	INVOKE SetTextColor,hdcMemhelp,00FFFFFFh
 	INVOKE SetBkColor,hdcMemhelp,0
 	INVOKE SelectObject,hdcMemhelp, font_40
 	INVOKE TextOutA,hdcMemhelp,0,0,offset helptext_title1,14
-	INVOKE TextOutA,hdcMemhelp,0,220,offset helptext_title2,17
+	INVOKE TextOutA,hdcMemhelp,0,200,offset helptext_title2,17
+	
 	INVOKE SelectObject,hdcMemhelp, font_20
-	INVOKE TextOutA,hdcMemhelp,0,40,offset helptext_hang1,53
-	INVOKE TextOutA,hdcMemhelp,0,60,offset helptext_hang2,54
-	INVOKE TextOutA,hdcMemhelp,0,80,offset helptext_hang3,55
-	INVOKE TextOutA,hdcMemhelp,0,100,offset helptext_hang4,32
-	INVOKE TextOutA,hdcMemhelp,0,120,offset helptext_hang5,55
-	INVOKE TextOutA,hdcMemhelp,0,140,offset helptext_hang6,54
-	INVOKE TextOutA,hdcMemhelp,0,160,offset helptext_hang7,52
-	INVOKE TextOutA,hdcMemhelp,0,180,offset helptext_hang8,52
-	INVOKE TextOutA,hdcMemhelp,0,200,offset helptext_hang9,18
-	INVOKE TextOutA,hdcMemhelp,0,280,offset helptext_hang10_1,27
-	INVOKE TextOutA,hdcMemhelp,390,280,offset helptext_hang10_6,8
-	INVOKE TextOutA,hdcMemhelp,0,340,offset helptext_hang11_1,27
-	INVOKE TextOutA,hdcMemhelp,440,340,offset helptext_hang11_6,8
-	INVOKE TextOutA,hdcMemhelp,0,400,offset helptext_hang12_1,35
-	INVOKE TextOutA,hdcMemhelp,490,400,offset helptext_hang12_6,12
-	INVOKE TextOutA,hdcMemhelp,0,440,offset helptext_hang13,53
+	INVOKE TextOutA,hdcMemhelp,0,40,offset helptext_hang1,54
+	INVOKE TextOutA,hdcMemhelp,0,60,offset helptext_hang2,53
+	INVOKE TextOutA,hdcMemhelp,0,80,offset helptext_hang3,39
+	INVOKE TextOutA,hdcMemhelp,0,100,offset helptext_hang4,57
+	INVOKE TextOutA,hdcMemhelp,0,120,offset helptext_hang5,56
+	INVOKE TextOutA,hdcMemhelp,0,140,offset helptext_hang6,58
+	INVOKE TextOutA,hdcMemhelp,0,160,offset helptext_hang7,55
+	INVOKE TextOutA,hdcMemhelp,0,180,offset helptext_hang8,23
+
+	INVOKE TextOutA,hdcMemhelp,0,260,offset helptext_hang9_1,17
+	INVOKE TextOutA,hdcMemhelp,280,260,offset helptext_hang9_6,9
+	INVOKE TextOutA,hdcMemhelp,0,320,offset helptext_hang10_1,17
+	INVOKE TextOutA,hdcMemhelp,330,320,offset helptext_hang10_6,9
+	INVOKE TextOutA,hdcMemhelp,0,360,offset helptext_hang11,52
+	INVOKE TextOutA,hdcMemhelp,0,400,offset helptext_hang12_1,39
+	INVOKE TextOutA,hdcMemhelp,525,400,offset helptext_hang12_6,9
+	INVOKE TextOutA,hdcMemhelp,0,440,offset helptext_hang13,58
 	INVOKE TextOutA,hdcMemhelp,0,460,offset helptext_hang14,58
 
 	INVOKE SetBkColor,hdcMemhelp,02BA245h
-	INVOKE TextOutA,hdcMemhelp,336,265,offset helptext_hang10_2,1
-	INVOKE TextOutA,hdcMemhelp,336,295,offset helptext_hang10_3,1
-	INVOKE TextOutA,hdcMemhelp,305,295,offset helptext_hang10_4,1
-	INVOKE TextOutA,hdcMemhelp,366,295,offset helptext_hang10_5,1
-	INVOKE TextOutA,hdcMemhelp,490,280,offset helptext_hang10_7,5
-	INVOKE TextOutA,hdcMemhelp,355,325,offset helptext_hang11_2,2
-	INVOKE TextOutA,hdcMemhelp,346,355,offset helptext_hang11_3,4
-	INVOKE TextOutA,hdcMemhelp,305,355,offset helptext_hang11_4,2
-	INVOKE TextOutA,hdcMemhelp,406,355,offset helptext_hang11_5,2
-	INVOKE TextOutA,hdcMemhelp,540,340,offset helptext_hang11_7,5
-	INVOKE TextOutA,hdcMemhelp,436,385,offset helptext_hang12_2,1
-	INVOKE TextOutA,hdcMemhelp,436,415,offset helptext_hang12_3,1
-	INVOKE TextOutA,hdcMemhelp,405,415,offset helptext_hang12_4,1
-	INVOKE TextOutA,hdcMemhelp,466,415,offset helptext_hang12_5,1
+	INVOKE TextOutA,hdcMemhelp,225,245,offset helptext_hang9_2,1
+	INVOKE TextOutA,hdcMemhelp,225,275,offset helptext_hang9_3,1
+	INVOKE TextOutA,hdcMemhelp,195,275,offset helptext_hang9_4,1
+	INVOKE TextOutA,hdcMemhelp,255,275,offset helptext_hang9_5,1
+	INVOKE TextOutA,hdcMemhelp,390,260,offset helptext_hang9_7,5
+	INVOKE TextOutA,hdcMemhelp,245,305,offset helptext_hang10_2,2
+	INVOKE TextOutA,hdcMemhelp,236,335,offset helptext_hang10_3,4
+	INVOKE TextOutA,hdcMemhelp,195,335,offset helptext_hang10_4,2
+	INVOKE TextOutA,hdcMemhelp,296,335,offset helptext_hang10_5,2
+	INVOKE TextOutA,hdcMemhelp,440,320,offset helptext_hang10_7,5
+	INVOKE TextOutA,hdcMemhelp,470,385,offset helptext_hang12_2,1
+	INVOKE TextOutA,hdcMemhelp,470,415,offset helptext_hang12_3,1
+	INVOKE TextOutA,hdcMemhelp,440,415,offset helptext_hang12_4,1
+	INVOKE TextOutA,hdcMemhelp,500,415,offset helptext_hang12_5,1
+
+	; 绘制帮助文档第二页并存在hdcmemhelp2
+	INVOKE CreateCompatibleDC, hdc
+	mov hdcMemhelp2, eax
+	invoke CreateCompatibleBitmap,hdcMempage,WINDOW_WIDTH,WINDOW_HEIGHT
+	invoke SelectObject,hdcMemhelp2,eax
+
+	invoke CreateSolidBrush, 02BA245h
+	invoke SelectObject, hdcMemhelp2, eax
+	INVOKE Rectangle,hdcMemhelp2,545,185,590,215  ; ESC
+	INVOKE Rectangle,hdcMemhelp2,410,215,455,245  ; ESC
+	INVOKE Rectangle,hdcMemhelp2,390,245,415,275  ; ESC
+
+	INVOKE SetTextColor,hdcMemhelp2,00FFFFFFh
+	INVOKE SetBkColor,hdcMemhelp2,0
+	INVOKE SelectObject,hdcMemhelp2, font_40
+	INVOKE TextOutA,hdcMemhelp2,0,0,offset helptext2_title1,15
+	INVOKE TextOutA,hdcMemhelp2,0,150,offset helptext2_title2,14
+	INVOKE TextOutA,hdcMemhelp2,0,280,offset helptext2_title3,10
+	
+	INVOKE SelectObject,hdcMemhelp2, font_20
+	INVOKE TextOutA,hdcMemhelp2,0,40,offset helptext2_hang1,51
+	INVOKE TextOutA,hdcMemhelp2,0,60,offset helptext2_hang2,57
+	INVOKE TextOutA,hdcMemhelp2,0,80,offset helptext2_hang3,58
+	INVOKE TextOutA,hdcMemhelp2,0,100,offset helptext2_hang4,58
+	INVOKE TextOutA,hdcMemhelp2,0,120,offset helptext2_hang5,15
+
+	INVOKE TextOutA,hdcMemhelp2,0,190,offset helptext2_hang6_1,49
+	INVOKE TextOutA,hdcMemhelp2,0,220,offset helptext2_hang7_1,37
+	INVOKE TextOutA,hdcMemhelp2,455,220,offset helptext2_hang7_3,6
+	INVOKE TextOutA,hdcMemhelp2,0,250,offset helptext2_hang8_1,35
+	INVOKE TextOutA,hdcMemhelp2,420,250,offset helptext2_hang8_3,14
+
+	INVOKE TextOutA,hdcMemhelp2,0,330,offset helptext2_hang9,41
+	INVOKE TextOutA,hdcMemhelp2,0,360,offset helptext2_hang10,38
+	INVOKE TextOutA,hdcMemhelp2,0,390,offset helptext2_hang11,39
+
+	INVOKE TextOutA,hdcMemhelp2,0,440,offset helptext2_hang12,58
+	INVOKE TextOutA,hdcMemhelp2,0,460,offset helptext2_hang13,58
+
+	INVOKE SetBkColor,hdcMemhelp2,02BA245h
+	INVOKE TextOutA,hdcMemhelp2,550,190,offset helptext2_hang6_2,3
+	INVOKE TextOutA,hdcMemhelp2,415,220,offset helptext2_hang7_2,3
+	INVOKE TextOutA,hdcMemhelp2,395,250,offset helptext2_hang8_2,1
 
 	ret
 DrawBasicPic ENDP
@@ -952,8 +1015,8 @@ PaintProc PROC USES ebx esi,
 				jne L1
 
 				.IF statusFlag == 3  ; 如果暂停
-					INVOKE SelectObject,hdcMempage, font_40
-					INVOKE TextOutA,hdcMempage,0,220,offset pauseText,31  ; 绘制暂停中提示
+					INVOKE SelectObject,hdcMempage, font_20
+					INVOKE TextOutA,hdcMempage,0,220,offset pauseText,59  ; 绘制暂停中提示
 				.ENDIF
 
 	.ELSEIF WhichMenu == 3   ;结束界面
@@ -965,7 +1028,11 @@ PaintProc PROC USES ebx esi,
 		INVOKE TextOutA,hdcMempage,60,320,offset endbacktip,19  ; press r to comeback
 
 	.ELSEIF WhichMenu == 4   ;帮助界面
-		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
+		.IF helpPage == 1
+			INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
+		.ELSE
+			INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp2, 0, 0, SRCCOPY
+		.ENDIF
 
 	.ELSEIF WhichMenu == 5   ;选关界面
 		; 将三张地图图片绘制到屏幕
@@ -1042,7 +1109,7 @@ rectconflect PROC x:WORD,y:WORD,color:WORD
 ; 返回eax，为0表示此时该坐标指示的块正常，
 ;为1表示该坐标指示的块进入到了虚空地区，
 ;为2表示改坐标指示的块进入到对手颜色的块
-	mov ax,y   ;检测白方的左上角是否在变色路径上
+	mov ax,y   ;检测左上角是否在变色路径上
 	mov bx,x
 	call calCoordinate
 	mov dx,[map+ax]
@@ -1054,7 +1121,7 @@ rectconflect PROC x:WORD,y:WORD,color:WORD
 		ret
 	.ENDIF
 
-	mov ax,y   ;检测白方的左下角是否在变色路径上
+	mov ax,y   ;检测左下角是否在变色路径上
 	add ax,23
 	mov bx,x
 	call calCoordinate
@@ -1067,7 +1134,7 @@ rectconflect PROC x:WORD,y:WORD,color:WORD
 		ret
 	.ENDIF
 
-	mov ax,y   ;检测白方的右上角是否在变色路径上
+	mov ax,y   ;检测右上角是否在变色路径上
 	mov bx,x
 	add bx,23
 	call calCoordinate
@@ -1080,7 +1147,7 @@ rectconflect PROC x:WORD,y:WORD,color:WORD
 		ret
 	.ENDIF
 
-	mov ax,y   ;检测白方的右下角是否在变色路径上
+	mov ax,y   ;检测右下角是否在变色路径上
 	add ax,23
 	mov bx,x
 	add bx,23
@@ -1413,26 +1480,8 @@ someOneDead PROC
 	
 	.IF ax == 1 ; 如果被击中的是黑色，那么白色胜利
 		mov statusFlag,2  ;将胜利标志位置2
-		mov [p1block],999
-		mov [p1block+2],999
-		mov ecx,300
-	L1:
-		mov ax,cx
-		dec ax
-		sal ax,1
-		mov [map+ax],1
-		loop L1
 	.ELSE  ; 如果被击中的是白色，黑色胜利
 		mov statusFlag,1  ;将胜利标志位置1
-		mov [p2block],999
-		mov [p2block+2],999
-		mov ecx,300
-	L2:
-		mov ax,cx
-		dec ax
-		sal ax,1
-		mov [map+ax],2
-		loop L2
 	.ENDIF
 	mov ecx,10
 	mov edx,offset bullets
