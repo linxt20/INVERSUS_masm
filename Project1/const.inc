@@ -93,10 +93,15 @@ startText				BYTE	"start",0				; 开始游戏标签
 helpText				BYTE	"help",0				; 控制帮助文档标签
 customText				BYTE	"custom",0				; 个性化定义颜色标签
 exitText				BYTE	"exit",0				; 退出游戏标签
+tipsText                byte     "--tips: you can use up-down or w-s to select the menu.--"
+tipsText2                byte     "--tips: you can use left-right or a-d to select the map.--"
+modeselectText            byte   "Game Mode Selection",0  ; 模式选择界面
 PVPText					BYTE	"P V P",0				; 双人小游戏模式标签
 PVEText					BYTE	"P V E",0				; 单机模式标签     unused
 BackText				BYTE	"<-back",0				; 返回上一级目录标签
-arrowText				BYTE	"->",0					; 指示地图选择标签
+mapselectText            byte     "Map Selection",0      ; 选地图
+arrowText1				BYTE	"|",0					; 指示地图选择标签
+arrowText2              byte     "V",0                  ; 指示地图选择标签
 pauseText				BYTE	"Pausing, press Esc to continue",0   ; 暂停标签
 bgChooseText			BYTE	"background",0			; 背景选择标签
 p1ChooseText			BYTE	"    p1    ",0			; p1选择标签
@@ -188,7 +193,8 @@ titlecolor                DWORD 00696946h ; 标题的颜色
 judgeup                 DWORD 1 ;
 
 ; 字体变量
-font_100                 DWORD ?  ; 高度为80像素的字体
+font_100                 DWORD ?  ; 高度为100像素的字体
+font_80                 DWORD ?  ; 高度为80像素的字体
 font_50					DWORD ?  ; 高度为50像素的字体
 font_40					DWORD ?  ; 高度为40像素的字体
 font_20					DWORD ?  ; 高度为20像素的字体

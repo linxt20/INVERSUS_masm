@@ -238,6 +238,8 @@ WinProc PROC,
 		; 创建并设置字体
 		INVOKE CreateFontA,100,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font_100, eax
+		INVOKE CreateFontA,60,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font_80, eax
 		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font_50, eax
 		INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
@@ -257,11 +259,11 @@ WinProc PROC,
 		mov hdcMemMap3, eax
 
 		; 主要图片存储进句柄
-		INVOKE LoadImageA, hInstance,118,0,160,120,0
+		INVOKE LoadImageA, hInstance,118,0,200,150,0
 		INVOKE SelectObject, hdcMemMap1, eax
-		INVOKE LoadImageA, hInstance,119,0,160,120,0
+		INVOKE LoadImageA, hInstance,119,0,200,150,0
 		INVOKE SelectObject, hdcMemMap2, eax
-		INVOKE LoadImageA, hInstance,120,0,160,120,0
+		INVOKE LoadImageA, hInstance,120,0,200,150,0
 		INVOKE SelectObject, hdcMemMap3, eax
 
 		; 释放当前窗口DC
@@ -537,13 +539,13 @@ chooseMenu PROC  ; 选择菜单函数
 			ret
 		.ENDIF
 	.ELSEIF WhichMenu == 5   ;选关界面
-		.IF eax == 38 || eax == 87   ; 识别向上按键和w
+		.IF eax == 37 || eax == 65   ; 识别向左按键和a
 			.IF SelectMenu > 0
 				dec SelectMenu  
 				ret
 			.ENDIF
 		.ENDIF
-		.IF eax == 40 || eax == 83  ; 识别向下按键和s
+		.IF eax == 39 || eax == 68  ; 识别向右按键和d
 			.IF SelectMenu < 2
 				inc SelectMenu
 				ret
@@ -811,14 +813,17 @@ PaintProc PROC USES ebx esi,
 			INVOKE SelectObject,hdcMempage, font_50
 			INVOKE TextOutA,hdcMempage,270,130,offset gamebanben,3 
 
-		INVOKE SelectObject,hdcMempage, font_50
 		INVOKE SetTextColor,hdcMempage,00FFFFFFh
 		INVOKE SetBkColor,hdcMempage,0
 		INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
 		INVOKE TextOutA,hdcMempage,266,268,offset helpText,4   ;640/2-54=266
 		INVOKE TextOutA,hdcMempage,240,328,offset customText,6 ;640/2-80=240
 		INVOKE TextOutA,hdcMempage,267,388,offset exitText,4   ;640/2-53=267
+		
+		INVOKE SelectObject,hdcMempage, font_20
+		INVOKE TextOutA,hdcMempage,5,450,offset tipsText,56
 
+		INVOKE SelectObject,hdcMempage, font_50
 		; 修改字体背景色和字体色，实现选中突出显示效果
 		INVOKE SetTextColor,hdcMempage,0
 		INVOKE SetBkColor,hdcMempage,00FFFFFFh
@@ -835,16 +840,23 @@ PaintProc PROC USES ebx esi,
 
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
 		; 这部分显示文字
-		INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5   ;640/2-69=251
-		INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240	
+		INVOKE SelectObject,hdcMempage, font_80
+		INVOKE TextOutA,hdcMempage,20,80,offset modeselectText,19
+		
+		INVOKE SelectObject,hdcMempage, font_20
+		INVOKE TextOutA,hdcMempage,5,450,offset tipsText,56
+
+		INVOKE SelectObject,hdcMempage, font_50
+		INVOKE TextOutA,hdcMempage,251,228,offset PVPText,5   ;640/2-69=251
+		INVOKE TextOutA,hdcMempage,240,338,offset BackText,6  ;640/2-80=240	
 
 		INVOKE SetTextColor,hdcMempage,0
 		INVOKE SetBkColor,hdcMempage,00FFFFFFh
 		; 给选中的菜单设置相反的背景与字色
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdcMempage,251,208,offset PVPText,5  ;640/2-69=251
+			INVOKE TextOutA,hdcMempage,251,228,offset PVPText,5  ;640/2-69=251
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdcMempage,240,368,offset BackText,6  ;640/2-80=240
+			INVOKE TextOutA,hdcMempage,240,338,offset BackText,6  ;640/2-80=240
 		.ENDIF
 
 	.ELSEIF WhichMenu == 2                    ;游戏界面
@@ -968,18 +980,28 @@ PaintProc PROC USES ebx esi,
 		INVOKE BitBlt, hdcMempage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, hdcMemhelp, 0, 0, SRCCOPY
 
 	.ELSEIF WhichMenu == 5   ;选关界面
+		INVOKE SelectObject,hdcMempage, font_80
+		INVOKE TextOutA,hdcMempage,120,80,offset mapselectText,13
 		; 将三张地图图片绘制到屏幕
-		INVOKE BitBlt, hdcMempage, 240, 30, 160, 120, hdcMemMap1, 0, 0, SRCCOPY
-		INVOKE BitBlt, hdcMempage, 240, 180, 160, 120, hdcMemMap2, 0, 0, SRCCOPY
-		INVOKE BitBlt, hdcMempage, 240, 330, 160, 120, hdcMemMap3, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 10, 250, 200, 150, hdcMemMap1, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 220, 250, 200, 150, hdcMemMap2, 0, 0, SRCCOPY
+		INVOKE BitBlt, hdcMempage, 430, 250, 200, 150, hdcMemMap3, 0, 0, SRCCOPY
 		; 分别绘制箭头在不同的位置
+		INVOKE SelectObject,hdcMempage, font_50
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdcMempage,170,60,offset arrowText,2
+			INVOKE TextOutA,hdcMempage,110,150,offset arrowText1,1
+			INVOKE TextOutA,hdcMempage,95,200,offset arrowText2,1
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdcMempage,170,210,offset arrowText,2
+			INVOKE TextOutA,hdcMempage,320,150,offset arrowText1,1
+			INVOKE TextOutA,hdcMempage,305,200,offset arrowText2,1
 		.ELSEIF SelectMenu == 2
-			INVOKE TextOutA,hdcMempage,170,360,offset arrowText,2
+			INVOKE TextOutA,hdcMempage,530,150,offset arrowText1,1
+			INVOKE TextOutA,hdcMempage,515,200,offset arrowText2,1
 		.ENDIF
+
+		INVOKE SelectObject,hdcMempage, font_20
+		INVOKE TextOutA,hdcMempage,0,450,offset tipsText2,58
+
 	.ELSEIF WhichMenu == 6
 		
 		; 为避免第一种颜色（黑色）与背景融为一体，将其周围画白框
