@@ -100,7 +100,7 @@ BackText				BYTE	"<-back",0				; 返回上一级目录标签
 mapselectText			byte    "Map Selection",0       ; 选地图
 arrowText1				BYTE	"|",0					; 指示地图选择标签
 arrowText2				byte    "V",0                   ; 指示地图选择标签
-pauseText				BYTE	"     Pausing, press Esc to continue, press C to quit.      ",0   ; 暂停标签
+pauseText				BYTE	"       Pausing, press C to continue, press Q to quit.       ",0   ; 暂停标签
 bgChooseText			BYTE	"background",0			; 背景选择标签
 p1ChooseText			BYTE	"    p1    ",0			; p1选择标签
 p2ChooseText			BYTE	"    p2    ",0			; p2选择标签
@@ -153,11 +153,11 @@ helptext2_hang5			BYTE	"it is defeated.",0 ;15
 helptext2_title2		BYTE	"PAUSE AND QUIT",0 ;14
 helptext2_hang6_1		BYTE	"During gaming, you can pause the game by pressing",0 ;49
 helptext2_hang6_2		BYTE	"ESC",0 ;3
-helptext2_hang7_1		BYTE	"You can continue the game by pressing",0 ;37
-helptext2_hang7_2		BYTE	"ESC",0 ;3
-helptext2_hang7_3		BYTE	"again.",0 ;6
+helptext2_hang7_1		BYTE	"If you want to continue the game, press",0 ;39
+helptext2_hang7_2		BYTE	"C",0 ;1
+helptext2_hang7_3		BYTE	"after pausing.",0 ;6
 helptext2_hang8_1		BYTE	"If you want to quit the game, press",0 ;35
-helptext2_hang8_2		BYTE	"C",0 ;1
+helptext2_hang8_2		BYTE	"Q",0 ;1
 helptext2_hang8_3		BYTE	"after pausing.",0 ;14
 
 helptext2_title3		BYTE	"CONTACT US",0 ;10

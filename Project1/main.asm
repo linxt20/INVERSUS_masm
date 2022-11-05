@@ -170,12 +170,19 @@ WinProc PROC,
 			jne @nw1
 			mov WKeyHold,1
 		@nw1:
-			cmp eax,67
+			cmp eax,67 ; 识别c键
 			jne @nc1
 			.IF statusFlag == 3
-				mov WhichMenu,0
+				mov statusFlag,0
 			.ENDIF
 		@nc1:
+			cmp eax,81 ; 识别q键
+			jne @nq1
+			.IF statusFlag == 3
+				mov WhichMenu,2
+				mov statusFlag,0
+			.ENDIF
+		@nq1:
 			.IF WhichMenu != 2
 				call chooseMenu
 			.ENDIF
@@ -329,8 +336,6 @@ EscapeKeyDown PROC
 	.IF WhichMenu == 2
 		.IF statusFlag == 0
 			mov statusFlag, 3  ; 如果游戏处于正常对战中状态，将状态标志位修改为3，即暂停
-		.ELSEIF statusFlag == 3
-			mov statusFlag, 0  ; 若已经处于暂停状态，将状态恢复。
 		.ENDIF
 	.ELSEIF WhichMenu != 3     ; 对于除游戏中界面、游戏胜利界面之外的界面，将界面跳转回主界面
 		mov WhichMenu, 0
@@ -743,8 +748,8 @@ L1:
 	invoke CreateSolidBrush, 02BA245h
 	invoke SelectObject, hdcMemhelp2, eax
 	INVOKE Rectangle,hdcMemhelp2,545,185,590,215  ; ESC
-	INVOKE Rectangle,hdcMemhelp2,410,215,455,245  ; ESC
-	INVOKE Rectangle,hdcMemhelp2,390,245,415,275  ; ESC
+	INVOKE Rectangle,hdcMemhelp2,430,215,455,245  ; C
+	INVOKE Rectangle,hdcMemhelp2,390,245,415,275  ; Q
 
 	INVOKE SetTextColor,hdcMemhelp2,00FFFFFFh
 	INVOKE SetBkColor,hdcMemhelp2,0
@@ -761,8 +766,8 @@ L1:
 	INVOKE TextOutA,hdcMemhelp2,0,120,offset helptext2_hang5,15
 
 	INVOKE TextOutA,hdcMemhelp2,0,190,offset helptext2_hang6_1,49
-	INVOKE TextOutA,hdcMemhelp2,0,220,offset helptext2_hang7_1,37
-	INVOKE TextOutA,hdcMemhelp2,455,220,offset helptext2_hang7_3,6
+	INVOKE TextOutA,hdcMemhelp2,0,220,offset helptext2_hang7_1,39
+	INVOKE TextOutA,hdcMemhelp2,455,220,offset helptext2_hang7_3,14
 	INVOKE TextOutA,hdcMemhelp2,0,250,offset helptext2_hang8_1,35
 	INVOKE TextOutA,hdcMemhelp2,420,250,offset helptext2_hang8_3,14
 
@@ -775,7 +780,7 @@ L1:
 
 	INVOKE SetBkColor,hdcMemhelp2,02BA245h
 	INVOKE TextOutA,hdcMemhelp2,550,190,offset helptext2_hang6_2,3
-	INVOKE TextOutA,hdcMemhelp2,415,220,offset helptext2_hang7_2,3
+	INVOKE TextOutA,hdcMemhelp2,435,220,offset helptext2_hang7_2,1
 	INVOKE TextOutA,hdcMemhelp2,395,250,offset helptext2_hang8_2,1
 
 	ret
@@ -1028,7 +1033,7 @@ PaintProc PROC USES ebx esi,
 
 				.IF statusFlag == 3  ; 如果暂停
 					INVOKE SelectObject,hdcMempage, font_20
-					INVOKE TextOutA,hdcMempage,0,220,offset pauseText,59  ; 绘制暂停中提示
+					INVOKE TextOutA,hdcMempage,0,220,offset pauseText,60  ; 绘制暂停中提示
 				.ENDIF
 
 	.ELSEIF WhichMenu == 3   ;结束界面
