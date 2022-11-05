@@ -86,6 +86,9 @@ P1WinMsg				BYTE	"P1 Win",0				; P1胜利提示
 P2WinMsg				BYTE	"P2 Win",0				; P2胜利提示   
 endbacktip				BYTE	"press r to comeback",0	; 结束页面提示语言
 
+gamename               byte   "INVERSUS",0 ;8
+gamebanben             byte    "ASM",0    ;3
+
 startText				BYTE	"start",0				; 开始游戏标签     
 helpText				BYTE	"help",0				; 控制帮助文档标签
 customText				BYTE	"custom",0				; 个性化定义颜色标签
@@ -181,7 +184,11 @@ Colors					DWORD 00000000h,00FFFFFFh,00CCA700h,00FF0000h,0000FF00h
 						DWORD 00674EA7h,00777777h,00777700h,008E7CC3h,00D1EEEEh
 						DWORD 008E388Eh,00D9D9D9h,007F6000h,00274E13h,00EAD1DCh
 
+titlecolor                DWORD 00696946h ; 标题的颜色
+judgeup                 DWORD 1 ;
+
 ; 字体变量
+font_100                 DWORD ?  ; 高度为80像素的字体
 font_50					DWORD ?  ; 高度为50像素的字体
 font_40					DWORD ?  ; 高度为40像素的字体
 font_20					DWORD ?  ; 高度为20像素的字体

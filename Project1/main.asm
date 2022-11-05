@@ -236,6 +236,8 @@ WinProc PROC,
 		mov hdc,eax
 
 		; 创建并设置字体
+		INVOKE CreateFontA,100,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
+		mov font_100, eax
 		INVOKE CreateFontA,50,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
 		mov font_50, eax
 		INVOKE CreateFontA,40,0,0,0,700,1,0,0,GB2312_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,ANTIALIASED_QUALITY,FF_DECORATIVE,NULL
@@ -787,23 +789,48 @@ PaintProc PROC USES ebx esi,
 
 	.IF WhichMenu == 0 ;开始界面
 		; 这部分主要是显示文字
-		INVOKE TextOutA,hdcMempage,253,188,offset startText,5  ;640/2-67=253
-		INVOKE TextOutA,hdcMempage,266,248,offset helpText,4   ;640/2-54=266
-		INVOKE TextOutA,hdcMempage,240,308,offset customText,6 ;640/2-80=240
-		INVOKE TextOutA,hdcMempage,267,368,offset exitText,4   ;640/2-53=267
+		INVOKE SelectObject,hdcMempage, font_100
+		mov eax,judgeup
+		cmp judgeup,0
+		je @colordown
+			add titlecolor,00030302h
+			cmp titlecolor,00ffffAAh
+			jne @drawtitle
+			mov eax,0
+			mov judgeup,eax
+		@colordown:
+			sub titlecolor,00030302h
+			cmp titlecolor,00696946h
+			jne @drawtitle
+			mov eax,1
+			mov judgeup,eax
+		@drawtitle:
+			INVOKE SetTextColor,hdcMempage,titlecolor
+			INVOKE SelectObject,hdcMempage, font_100
+			INVOKE TextOutA,hdcMempage,100,30,offset gamename,8 
+			INVOKE SelectObject,hdcMempage, font_50
+			INVOKE TextOutA,hdcMempage,270,130,offset gamebanben,3 
+
+		INVOKE SelectObject,hdcMempage, font_50
+		INVOKE SetTextColor,hdcMempage,00FFFFFFh
+		INVOKE SetBkColor,hdcMempage,0
+		INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
+		INVOKE TextOutA,hdcMempage,266,268,offset helpText,4   ;640/2-54=266
+		INVOKE TextOutA,hdcMempage,240,328,offset customText,6 ;640/2-80=240
+		INVOKE TextOutA,hdcMempage,267,388,offset exitText,4   ;640/2-53=267
 
 		; 修改字体背景色和字体色，实现选中突出显示效果
 		INVOKE SetTextColor,hdcMempage,0
 		INVOKE SetBkColor,hdcMempage,00FFFFFFh
 		; 给选中的菜单设置相反的背景与字色
 		.IF SelectMenu == 0
-			INVOKE TextOutA,hdcMempage,253,188,offset startText,5  ;640/2-67=253
+			INVOKE TextOutA,hdcMempage,253,208,offset startText,5  ;640/2-67=253
 		.ELSEIF SelectMenu == 1
-			INVOKE TextOutA,hdcMempage,266,248,offset helpText,4   ;640/2-54=266
+			INVOKE TextOutA,hdcMempage,266,268,offset helpText,4   ;640/2-54=266
 		.ELSEIF SelectMenu == 2
-			INVOKE TextOutA,hdcMempage,240,308,offset customText,6 ;640/2-80=240
+			INVOKE TextOutA,hdcMempage,240,328,offset customText,6 ;640/2-80=240
 		.ELSEIF SelectMenu == 3
-			INVOKE TextOutA,hdcMempage,267,368,offset exitText,4   ;640/2-53=267
+			INVOKE TextOutA,hdcMempage,267,388,offset exitText,4   ;640/2-53=267
 		.ENDIF
 
 	.ELSEIF WhichMenu == 1  ;游戏模式选择界面
