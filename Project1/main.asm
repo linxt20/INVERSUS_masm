@@ -179,7 +179,7 @@ WinProc PROC,
 			cmp eax,81 ; 识别q键
 			jne @nq1
 			.IF statusFlag == 3
-				mov WhichMenu,2
+				mov WhichMenu,1
 				mov statusFlag,0
 			.ENDIF
 		@nq1:
